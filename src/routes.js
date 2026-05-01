@@ -22,6 +22,9 @@ import Register from "views/examples/Register.js";
 import Login from "views/examples/Login.js";
 import Tables from "views/examples/Tables.js";
 import Icons from "views/examples/Icons.js";
+import Logigramme from "views/logigramme/Logigramme.js";
+
+import Test from "views/test.js";
 
 var routes = [
   {
@@ -29,6 +32,13 @@ var routes = [
     name: "Dashboard",
     icon: "ni ni-tv-2 text-primary",
     component: <Index />,
+    layout: "/admin",
+  },
+  {
+    path: "/test",
+    name: "test",
+    icon: "ni ni-tv-2 text-primary",
+    component: <Test />,
     layout: "/admin",
   },
   {
@@ -72,6 +82,14 @@ var routes = [
     icon: "ni ni-circle-08 text-pink",
     component: <Register />,
     layout: "/auth",
+  },
+
+  {
+    path: "/Logigramme",
+    name: "Logigramme",
+    icon: "ni ni-tv-2 text-primary",
+    component: <Logigramme />,
+    layout: "/admin",
   },
 ];
 export default routes;
