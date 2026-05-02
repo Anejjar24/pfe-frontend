@@ -21531,3 +21531,126 @@ button:focus,
 }
 
 /*# sourceMappingURL=argon-dashboard-react.css.map */
+/* ── MINI MODE : forcer toute la chaîne à 68px ──────────────────────────── */
+
+@media (min-width: 768px) {
+
+  #sidenav-main.sidebar-mini {
+    width: 68px !important;
+    min-width: 68px !important;
+    max-width: 68px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Container fluid */
+  #sidenav-main.sidebar-mini > .container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 68px !important;
+    min-width: 68px !important;
+    max-width: 68px !important;
+    overflow: hidden !important;
+  }
+
+  /* Navbar brand centré */
+  #sidenav-main.sidebar-mini .navbar-brand {
+    width: 68px !important;
+    display: flex !important;
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Collapse forcé à 68px */
+  #sidenav-main.sidebar-mini .navbar-collapse {
+    width: 68px !important;
+    min-width: 68px !important;
+    max-width: 68px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Nav forcé à 68px */
+  #sidenav-main.sidebar-mini .navbar-nav {
+    width: 68px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Chaque nav-item */
+  #sidenav-main.sidebar-mini .navbar-nav .nav-item {
+    width: 68px !important;
+  }
+
+  /* Chaque nav-link : icône centrée uniquement */
+  #sidenav-main.sidebar-mini .navbar-nav .nav-link {
+    width: 68px !important;
+    padding: 0.65rem 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  /* Icône : taille fixe, pas de margin */
+  #sidenav-main.sidebar-mini .navbar-nav .nav-link > i {
+    min-width: auto !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    font-size: 1rem !important;
+    flex-shrink: 0;
+  }
+
+  /* Cacher TOUT le texte */
+  #sidenav-main.sidebar-mini .navbar-nav .nav-link > span,
+  #sidenav-main.sidebar-mini .navbar-nav .nav-link > .nav-link-text {
+    display: none !important;
+  }
+
+  /* Cacher les headings texte */
+  #sidenav-main.sidebar-mini .navbar-heading {
+    display: none !important;
+  }
+
+  /* hr séparateur */
+  #sidenav-main.sidebar-mini hr {
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+  }
+
+  /* Collapse avant du navbar-collapse Argon */
+  #sidenav-main.sidebar-mini .navbar-collapse:before {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Main content */
+  .main-content {
+    transition: margin-left 0.28s ease;
+  }
+
+  .main-content.main-content-mini {
+    margin-left: 68px !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  #sidenav-main.sidebar-mini {
+    width: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+    overflow: visible !important;
+  }
+
+  .main-content.main-content-mini {
+    margin-left: 0 !important;
+  }
+}
