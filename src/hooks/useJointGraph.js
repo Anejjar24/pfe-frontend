@@ -1,6 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { dia, shapes } from "@joint/core";
-import { createWorkflowLink, createWorkflowNode, updateNodeProperties } from "registry/blockFactory";
+import {
+  createWorkflowLink,
+  createWorkflowNode,
+  updateNodeProperties,
+} from "registry/blockFactory";
 import { deserializeGraph } from "engine/graphDeserializer";
 import { serializeGraph } from "engine/graphSerializer";
 
@@ -18,59 +22,90 @@ export function useJointGraph() {
     return nextWorkflow;
   }, []);
 
-  const initialize = useCallback((element, options = {}) => {
-    const graph = new dia.Graph({}, { cellNamespace: shapes });
-    const paper = new dia.Paper({
-      el: element,
-      model: graph,
-      width: "100%",
-      height: "100%",
-      gridSize: 20,
-      drawGrid: { name: "mesh", args: { color: "#d9e2ec", thickness: 1 } },
-      background: { color: "#f8fafc" },
-      cellViewNamespace: shapes,
-      sorting: dia.Paper.sorting.APPROX,
-      defaultLink: () => createWorkflowLink({}, {}),
-      defaultConnector: { name: "rounded" },
-      defaultRouter: { name: "manhattan" },
-      linkPinning: false,
-      validateConnection: (sourceView, sourceMagnet, targetView, targetMagnet) => {
-        if (!sourceMagnet || !targetMagnet || sourceView === targetView) return false;
-        return sourceMagnet.getAttribute("port-group") === "output" && targetMagnet.getAttribute("port-group") === "input";
-      },
-      interactive: { linkMove: false },
-      markAvailable: true,
-    });
+  const initialize = useCallback(
+    (element, options = {}) => {
+      // Read the real pixel size at mount time so JointJS never starts at 0×0.
+      // The ResizeObserver in JointPaper.jsx keeps this updated afterward.
+      const initWidth = element.offsetWidth || element.clientWidth || 800;
+      const initHeight = element.offsetHeight || element.clientHeight || 600;
 
-    graphRef.current = graph;
-    paperRef.current = paper;
+      const graph = new dia.Graph({}, { cellNamespace: shapes });
+      const paper = new dia.Paper({
+        el: element,
+        model: graph,
+        // Use concrete pixel dimensions, not "100%"
+        width: initWidth,
+        height: initHeight,
+        gridSize: 20,
+        drawGrid: { name: "mesh", args: { color: "#d9e2ec", thickness: 1 } },
+        background: { color: "#f8fafc" },
+        cellViewNamespace: shapes,
+        sorting: dia.Paper.sorting.APPROX,
+        defaultLink: () => createWorkflowLink({}, {}),
+        defaultConnector: { name: "rounded" },
+        defaultRouter: { name: "manhattan" },
+        linkPinning: false,
+        validateConnection: (
+          sourceView,
+          sourceMagnet,
+          targetView,
+          targetMagnet
+        ) => {
+          if (!sourceMagnet || !targetMagnet || sourceView === targetView)
+            return false;
+          return (
+            sourceMagnet.getAttribute("port-group") === "output" &&
+            targetMagnet.getAttribute("port-group") === "input"
+          );
+        },
+        interactive: { linkMove: false },
+        markAvailable: true,
+      });
 
-    paper.on("element:pointerclick", (elementView) => setSelectedNode(elementView.model));
-    paper.on("element:pointerdblclick", (elementView) => options.onEdit?.(elementView.model));
-    paper.on("blank:pointerclick", () => setSelectedNode(null));
-    graph.on("add remove change:position change:target change:source change:workflow", refreshWorkflow);
+      graphRef.current = graph;
+      paperRef.current = paper;
 
-    return () => {
-      paper.remove();
-      graph.clear();
-      graphRef.current = null;
-      paperRef.current = null;
-    };
-  }, [refreshWorkflow]);
+      paper.on("element:pointerclick", (elementView) =>
+        setSelectedNode(elementView.model)
+      );
+      paper.on("element:pointerdblclick", (elementView) =>
+        options.onEdit?.(elementView.model)
+      );
+      paper.on("blank:pointerclick", () => setSelectedNode(null));
+      graph.on(
+        "add remove change:position change:target change:source change:workflow",
+        refreshWorkflow
+      );
 
-  const addNode = useCallback((type, position) => {
-    const node = createWorkflowNode(type, position);
-    node.addTo(graphRef.current);
-    setSelectedNode(node);
-    refreshWorkflow();
-  }, [refreshWorkflow]);
+      return () => {
+        paper.remove();
+        graph.clear();
+        graphRef.current = null;
+        paperRef.current = null;
+      };
+    },
+    [refreshWorkflow]
+  );
 
-  const updateSelectedNode = useCallback((properties) => {
-    if (!selectedNode) return;
-    updateNodeProperties(selectedNode, properties);
-    setSelectedNode(selectedNode);
-    refreshWorkflow();
-  }, [refreshWorkflow, selectedNode]);
+  const addNode = useCallback(
+    (type, position) => {
+      const node = createWorkflowNode(type, position);
+      node.addTo(graphRef.current);
+      setSelectedNode(node);
+      refreshWorkflow();
+    },
+    [refreshWorkflow]
+  );
+
+  const updateSelectedNode = useCallback(
+    (properties) => {
+      if (!selectedNode) return;
+      updateNodeProperties(selectedNode, properties);
+      setSelectedNode(selectedNode);
+      refreshWorkflow();
+    },
+    [refreshWorkflow, selectedNode]
+  );
 
   const deleteSelectedNode = useCallback(() => {
     if (!selectedNode) return;
@@ -83,19 +118,24 @@ export function useJointGraph() {
     if (!selectedNode) return;
     const workflowData = selectedNode.get("workflow");
     const position = selectedNode.position();
-    const node = createWorkflowNode(workflowData.type, { x: position.x + 36, y: position.y + 36 }, {
-      properties: { ...(workflowData.properties || {}) },
-    });
+    const node = createWorkflowNode(
+      workflowData.type,
+      { x: position.x + 36, y: position.y + 36 },
+      { properties: { ...(workflowData.properties || {}) } }
+    );
     node.addTo(graphRef.current);
     setSelectedNode(node);
     refreshWorkflow();
   }, [refreshWorkflow, selectedNode]);
 
-  const importWorkflow = useCallback((nextWorkflow) => {
-    deserializeGraph(graphRef.current, nextWorkflow);
-    setSelectedNode(null);
-    refreshWorkflow();
-  }, [refreshWorkflow]);
+  const importWorkflow = useCallback(
+    (nextWorkflow) => {
+      deserializeGraph(graphRef.current, nextWorkflow);
+      setSelectedNode(null);
+      refreshWorkflow();
+    },
+    [refreshWorkflow]
+  );
 
   const setPaperZoom = useCallback((nextZoom) => {
     const value = Math.min(1.8, Math.max(0.45, nextZoom));

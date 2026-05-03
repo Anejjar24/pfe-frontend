@@ -1,32 +1,113 @@
+/* ============================================================
+   workflowBuilder.css
+   Responsive 3-panel workflow editor — Argon Dashboard React
+   ============================================================ */
+
+/* ------------------------------------------------------------------
+   1. ROOT LAYOUT
+   The Argon Dashboard wraps page content in a flex column with its
+   own padding. We must break out of that column context and stretch
+   to fill exactly the remaining viewport height below the navbar.
+   ------------------------------------------------------------------ */
+
+/*
+  Argon renders:  <div class="main-content"> → <div class="container-fluid">
+  We need our <main class="workflow-builder"> to escape that padding and
+  fill the full available height.  The cleanest way is to use a negative
+  margin trick + explicit height anchored to the viewport.
+*/
+
 .workflow-builder {
+  /* ── 3-column fluid grid ─────────────────────────────────── */
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 320px;
-  height: calc(100vh - 72px);
-  min-height: 720px;
+  grid-template-columns:  /* modify here for columns  */
+    clamp(200px, 18vw, 300px)   /* modify here left sidebar  */
+    minmax(0, 1fr)               /* center canvas */
+    clamp(200px, 18vw, 300px);  /* right panel   */
+  grid-template-rows: 1fr;
+
+  /* ── Full-height below Argon navbar (≈70 px) ────────────── */
+  height: calc(100vh - 70px);
+  min-height: 600px;
+
+  /* ── Escape Argon's container padding ───────────────────── */
+  margin-left: calc(-1 * var(--argon-gutter, 24px));
+  margin-right: calc(-1 * var(--argon-gutter, 24px));
+  width: calc(100% + 2 * var(--argon-gutter, 24px));
+
+  /* ── Surface ─────────────────────────────────────────────── */
   background: #eef2f7;
   color: #0f172a;
+
+  /* Prevent any child from bleeding outside the grid */
+  overflow: hidden;
+  position: relative;
 }
 
-.workflow-sidebar,
-.properties-panel {
+/* ------------------------------------------------------------------
+   2. SIDEBAR  (left column)
+   ------------------------------------------------------------------ */
+
+.workflow-sidebar {
   background: #ffffff;
   border-right: 1px solid #d7dee8;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;           /* children scroll internally */
+}
+
+/* ------------------------------------------------------------------
+   3. PROPERTIES PANEL  (right column)
+   ------------------------------------------------------------------ */
+
+.properties-panel {
+  background: #ffffff;
+  border-left: 1px solid #d7dee8;
   display: flex;
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
 }
 
-.properties-panel {
-  border-left: 1px solid #d7dee8;
-  border-right: 0;
+/* ------------------------------------------------------------------
+   4. CANVAS PANEL  (center column — critical containment)
+   ------------------------------------------------------------------ */
+
+
+.workflow-canvas-panel {
+  display: grid;
+  grid-template-rows: 56px 1fr;   /* was minmax(0,1fr) — 1fr alone works fine here */
+  min-width: 0;
+  min-height: 0;                   /* ADD THIS — needed inside a grid cell */
+  overflow: hidden;
 }
+/* The JointJS paper host must fill its cell and never overflow */
+.joint-paper-host {
+  cursor: default;
+  overflow: hidden;
+  position: relative;
+  /* Ensure it always matches its grid cell exactly */
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.joint-paper-host.is-panning {
+  cursor: grabbing;
+}
+
+/* ------------------------------------------------------------------
+   5. PANEL HEADER  (used in both sidebar and properties panel)
+   ------------------------------------------------------------------ */
 
 .panel-heading {
   align-items: flex-start;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   gap: 2px;
   padding: 18px;
 }
@@ -46,10 +127,15 @@
   line-height: 1.35;
 }
 
+/* ------------------------------------------------------------------
+   6. SIDEBAR SEARCH  (sticky at top of scroll)
+   ------------------------------------------------------------------ */
+
 .workflow-search {
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
+  flex-shrink: 0;
   gap: 8px;
   padding: 12px 16px;
 }
@@ -58,17 +144,30 @@
   border: 0;
   flex: 1;
   font-size: 13px;
+  min-width: 0;
   outline: 0;
 }
+
+/* ------------------------------------------------------------------
+   7. SCROLLABLE CONTENT AREAS
+   ------------------------------------------------------------------ */
 
 .category-stack,
 .property-stack {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px;
+  /* Allow these regions to grow and scroll — nothing else scrolls */
+  flex: 1 1 0;
+  min-height: 0;
 }
+
+/* ------------------------------------------------------------------
+   8. BLOCK CATEGORIES & PALETTE ITEMS
+   ------------------------------------------------------------------ */
 
 .block-category h3,
 .execution-result h3 {
@@ -97,6 +196,7 @@
   padding: 10px;
   text-align: left;
   width: 100%;
+  box-sizing: border-box;  /* prevent width overflow */
 }
 
 .block-palette-item {
@@ -107,6 +207,10 @@
   border-color: #94a3b8;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
+
+/* ------------------------------------------------------------------
+   9. BLOCK ICON
+   ------------------------------------------------------------------ */
 
 .block-icon {
   align-items: center;
@@ -119,18 +223,20 @@
   width: 34px;
 }
 
-.workflow-canvas-panel {
-  display: grid;
-  grid-template-rows: 56px minmax(0, 1fr);
-  min-width: 0;
-}
+/* ------------------------------------------------------------------
+   10. TOOLBAR
+   ------------------------------------------------------------------ */
 
 .workflow-toolbar {
   align-items: center;
   background: #ffffff;
   border-bottom: 1px solid #d7dee8;
   display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;            /* allows wrap on very narrow viewports */
   gap: 12px;
+  min-width: 0;
+  overflow: hidden;
   padding: 8px 14px;
 }
 
@@ -146,6 +252,7 @@
   background: #f8fafc;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
+  box-sizing: border-box;
   color: #0f172a;
   cursor: pointer;
   display: inline-flex;
@@ -155,10 +262,10 @@
   justify-content: center;
   min-width: 34px;
   padding: 0 10px;
-  box-sizing: border-box;
+  white-space: nowrap;
 }
 
-/* ✅ Fix complet du label upload */
+/* Upload label styled as button */
 .icon-upload {
   align-items: center;
   background: #f8fafc;
@@ -173,6 +280,7 @@
   justify-content: center;
   min-width: 34px;
   padding: 0 10px;
+  white-space: nowrap;
 }
 
 .icon-upload input {
@@ -195,6 +303,7 @@
   color: #64748b;
   font-size: 12px;
   margin-left: auto;
+  white-space: nowrap;
 }
 
 .zoom-readout {
@@ -204,16 +313,9 @@
   text-align: center;
 }
 
-.joint-paper-host {
-  cursor: default;
-  min-height: 0;
-  overflow: hidden;
-  position: relative;
-}
-
-.joint-paper-host.is-panning {
-  cursor: grabbing;
-}
+/* ------------------------------------------------------------------
+   11. PROPERTIES PANEL FIELDS
+   ------------------------------------------------------------------ */
 
 .property-field {
   display: flex;
@@ -232,10 +334,16 @@
 .property-field textarea {
   border: 1px solid #cbd5e1;
   border-radius: 6px;
+  box-sizing: border-box;
   color: #0f172a;
   font-size: 13px;
   padding: 9px 10px;
+  width: 100%;
 }
+
+/* ------------------------------------------------------------------
+   12. MISC — EMPTY STATE, NODE SUMMARY, EXECUTION RESULT
+   ------------------------------------------------------------------ */
 
 .empty-state {
   color: #64748b;
@@ -244,13 +352,15 @@
 }
 
 .node-summary {
+  flex-shrink: 0;
   margin: 16px;
   width: auto;
+  box-sizing: border-box;
 }
 
 .execution-result {
   border-top: 1px solid #e2e8f0;
-  margin-top: auto;
+  flex-shrink: 0;
   padding: 16px;
 }
 
@@ -263,6 +373,10 @@
   overflow: auto;
   padding: 12px;
 }
+
+/* ------------------------------------------------------------------
+   13. NODE EDITOR MODAL  (stacked above everything via fixed position)
+   ------------------------------------------------------------------ */
 
 .modal-backdrop {
   align-items: center;
@@ -290,6 +404,7 @@
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
+  flex-shrink: 0;
   justify-content: space-between;
   padding: 14px 16px;
 }
@@ -301,6 +416,18 @@
   justify-content: flex-end;
 }
 
+/* Modal body scrolls if content is tall */
+.node-modal .modal-body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* ------------------------------------------------------------------
+   14. TOAST NOTIFICATION
+   ------------------------------------------------------------------ */
+
 .workflow-toast {
   background: #0f172a;
   border-radius: 6px;
@@ -311,11 +438,20 @@
   position: fixed;
   right: 20px;
   z-index: 2100;
+  max-width: calc(100vw - 40px);
+  word-break: break-word;
 }
 
+/* ------------------------------------------------------------------
+   15. RESPONSIVE BREAKPOINTS
+   ------------------------------------------------------------------ */
+
+/* ── Tablet: hide right properties panel, compress sidebar ── */
 @media (max-width: 1180px) {
   .workflow-builder {
-    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-columns:
+      clamp(180px, 26vw, 260px)   /* sidebar */
+      minmax(0, 1fr);              /* canvas  */
   }
 
   .properties-panel {
@@ -323,13 +459,83 @@
   }
 }
 
-@media (max-width: 780px) {
+/* ── Large tablet / landscape phone: collapse sidebar to icons ── */
+@media (max-width: 900px) {
   .workflow-builder {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(520px, 1fr);
+    grid-template-columns:
+      clamp(52px, 14vw, 180px)    /* sidebar shrinks */
+      minmax(0, 1fr);
+  }
+
+  /* Hide text labels when sidebar is very narrow */
+  .block-palette-item small,
+  .panel-heading small {
+    display: none;
+  }
+}
+
+/* ── Mobile: sidebar slides to a top strip, canvas below ── */
+@media (max-width: 640px) {
+  .workflow-builder {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100dvh;
+    /* Remove the escape margins on mobile — let it flow naturally */
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    overflow-y: auto;
   }
 
   .workflow-sidebar {
-    max-height: 260px;
+    border-right: none;
+    border-bottom: 1px solid #d7dee8;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    height: auto;
+    max-height: 200px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .category-stack {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .block-category {
+    flex-shrink: 0;
+  }
+
+  .block-list {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .block-palette-item {
+    flex-direction: column;
+    min-width: 80px;
+    text-align: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+
+  .workflow-canvas-panel {
+    /* Take the remaining vertical space */
+    flex: 1 1 0;
+    min-height: 480px;
+  }
+
+ 
+  .workflow-toolbar {
+    /* Overflow-scroll the toolbar on mobile */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 6px 10px;
   }
 }
