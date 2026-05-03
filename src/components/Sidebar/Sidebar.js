@@ -24,48 +24,52 @@ import {
   InputGroup,
 } from "reactstrap";
 
+const SIDEBAR_FULL = 250; // px — expanded
+const SIDEBAR_MINI = 68;  // px — icon-only
 const MD_BREAKPOINT = 768;
 
 const Sidebar = (props) => {
   const [collapseOpen, setCollapseOpen] = useState(false);
-  const [mini, setMini] = useState(false);
+  const [mini, setMini]                 = useState(false);
+  const [isDesktop, setIsDesktop]       = useState(
+    typeof window !== "undefined" && window.innerWidth >= MD_BREAKPOINT
+  );
 
-  // Sur desktop : on ajoute/retire la classe CSS sur le sidebar et main-content
-  // Sur mobile : on ne touche à RIEN — Argon gère tout via son propre CSS
-  const applyMiniClass = useCallback((isMini) => {
-    const sidebar = document.getElementById("sidenav-main");
-    const main = document.querySelector(".main-content");
-    if (!sidebar || !main) return;
+  // Applique margin-left sur .main-content — desktop uniquement
+  const applyMargin = useCallback((isMini) => {
+    const el = document.querySelector(".main-content");
+    if (!el) return;
 
     if (window.innerWidth < MD_BREAKPOINT) {
-      // Mobile : retirer toute trace de nos overrides
-      sidebar.classList.remove("sidebar-mini");
-      main.classList.remove("main-content-mini");
+      // Mobile : reset inline — Argon gère le layout
+      el.style.marginLeft = "";
+      el.style.transition = "";
       return;
     }
 
-    // Desktop uniquement
-    if (isMini) {
-      sidebar.classList.add("sidebar-mini");
-      main.classList.add("main-content-mini");
-    } else {
-      sidebar.classList.remove("sidebar-mini");
-      main.classList.remove("main-content-mini");
-    }
+    // Desktop : on pilote le margin via JS
+    el.style.transition  = "margin-left 0.28s ease";
+    el.style.marginLeft  = (isMini ? SIDEBAR_MINI : SIDEBAR_FULL) + "px";
   }, []);
 
+  // Réagir au changement de mini
   useEffect(() => {
-    applyMiniClass(mini);
-  }, [mini, applyMiniClass]);
+    applyMargin(mini);
+  }, [mini, applyMargin]);
 
+  // Réagir au resize de la fenêtre
   useEffect(() => {
-    const onResize = () => applyMiniClass(mini);
+    const onResize = () => {
+      const desktop = window.innerWidth >= MD_BREAKPOINT;
+      setIsDesktop(desktop);
+      applyMargin(mini);
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [mini, applyMiniClass]);
+  }, [mini, applyMargin]);
 
   const toggleCollapse = () => setCollapseOpen((v) => !v);
-  const closeCollapse = () => setCollapseOpen(false);
+  const closeCollapse  = () => setCollapseOpen(false);
 
   const createLinks = (routes) =>
     routes.map((prop, key) => (
@@ -74,57 +78,70 @@ const Sidebar = (props) => {
           to={prop.layout + prop.path}
           tag={NavLinkRRD}
           onClick={closeCollapse}
-          title={mini ? prop.name : undefined}
-          className={mini ? "nav-link-mini" : ""}
+          title={isDesktop && mini ? prop.name : undefined}
+          style={isDesktop ? linkStyle(mini) : {}}
         >
-          <i className={prop.icon} />
-          {!mini && <span>{prop.name}</span>}
+          <i className={prop.icon} style={isDesktop ? iconStyle(mini) : {}} />
+          {(!isDesktop || !mini) && <span>{prop.name}</span>}
         </NavLink>
       </NavItem>
     ));
 
   const { routes, logo } = props;
   let navbarBrandProps = {};
-  if (logo?.innerLink) navbarBrandProps = { to: logo.innerLink, tag: Link };
+  if (logo?.innerLink)       navbarBrandProps = { to: logo.innerLink, tag: Link };
   else if (logo?.outterLink) navbarBrandProps = { href: logo.outterLink, target: "_blank" };
 
   return (
-    // ⚠️ AUCUN style inline de width ici — tout est géré par CSS
-    // <Navbar
-    //   className="navbar-vertical fixed-left navbar-light bg-white"
-    //   expand="md"
-    //   id="sidenav-main"
-    // >
     <Navbar
-  className="navbar-vertical fixed-left navbar-light bg-white"
-  expand="md"
-  id="sidenav-main"
-  style={{
-    width:      (mini ? "68px" : "250px"),
-    minWidth:   (mini ? "68px" : "250px"),
-    maxWidth:   (mini ? "68px" : "250px"),
-    transition: "width 0.28s ease, min-width 0.28s ease, max-width 0.28s ease",
-    overflow:   "hidden",
-  }}
->
-      <Container fluid>
-        {/* Mobile toggler */}
+      className="navbar-vertical fixed-left navbar-light bg-white"
+      expand="md"
+      id="sidenav-main"
+      style={isDesktop ? {
+        width:      (mini ? SIDEBAR_MINI : SIDEBAR_FULL) + "px",
+        minWidth:   (mini ? SIDEBAR_MINI : SIDEBAR_FULL) + "px",
+        maxWidth:   (mini ? SIDEBAR_MINI : SIDEBAR_FULL) + "px",
+        transition: "width 0.28s ease, min-width 0.28s ease, max-width 0.28s ease",
+        overflow:   "hidden",
+      } : {}}
+    >
+      <Container fluid style={isDesktop ? { padding: 0 } : {}}>
+
+        {/* ── Mobile toggler ─────────────────────────────────── */}
         <button className="navbar-toggler" type="button" onClick={toggleCollapse}>
           <span className="navbar-toggler-icon" />
         </button>
 
-        {/* Logo */}
+        {/* ── Logo ───────────────────────────────────────────── */}
         {logo && (
-          <NavbarBrand className="pt-0" {...navbarBrandProps}>
+          <NavbarBrand
+            className="pt-0"
+            {...navbarBrandProps}
+            style={isDesktop ? {
+              display:        "flex",
+              justifyContent: mini ? "center" : "flex-start",
+              width:          "100%",
+              marginRight:    0,
+            } : {}}
+          >
             <img
               alt={logo.imgAlt}
               className="navbar-brand-img"
-              src={mini ? require("../../assets/img/brand/box.png") : logo.imgSrc}
+              src={
+                isDesktop && mini
+                  ? require("../../assets/img/brand/box.png")
+                  : logo.imgSrc
+              }
+              style={isDesktop ? {
+                maxWidth:   mini ? "36px" : "140px",
+                height:     "auto",
+                transition: "max-width 0.28s ease",
+              } : {}}
             />
           </NavbarBrand>
         )}
 
-        {/* Mobile user icons */}
+        {/* ── Mobile user icons ──────────────────────────────── */}
         <Nav className="align-items-center d-md-none">
           <UncontrolledDropdown nav>
             <DropdownToggle nav className="nav-link-icon">
@@ -141,6 +158,7 @@ const Sidebar = (props) => {
               <DropdownItem>Something else here</DropdownItem>
             </DropdownMenu>
           </UncontrolledDropdown>
+
           <UncontrolledDropdown nav>
             <DropdownToggle nav>
               <Media className="align-items-center">
@@ -176,8 +194,9 @@ const Sidebar = (props) => {
           </UncontrolledDropdown>
         </Nav>
 
-        {/* Collapse */}
+        {/* ── Collapsible nav ────────────────────────────────── */}
         <Collapse navbar isOpen={collapseOpen}>
+
           {/* Mobile collapse header */}
           <div className="navbar-collapse-header d-md-none">
             <Row>
@@ -214,26 +233,30 @@ const Sidebar = (props) => {
             </InputGroup>
           </Form>
 
-          {/* Bouton toggle mini — desktop uniquement */}
+          {/* ── Bouton toggle mini — desktop uniquement ─────── */}
           <Nav navbar className="d-none d-md-block mb-1">
             <NavItem>
               <NavLink
                 href="#"
                 onClick={(e) => { e.preventDefault(); setMini((v) => !v); }}
                 title={mini ? "Expand sidebar" : "Collapse sidebar"}
-                className="nav-link-mini"
+                style={{ ...linkStyle(mini), cursor: "pointer" }}
               >
-                <i className="fa fa-bars" />
+                <i
+                  className="fa fa-bars"
+                  style={{ ...iconStyle(mini), fontSize: "1.15rem" }}
+                />
               </NavLink>
             </NavItem>
           </Nav>
 
-          {/* Routes */}
+          {/* Routes principales */}
           <Nav navbar>{createLinks(routes)}</Nav>
 
           <hr className="my-3" />
 
-          {!mini && (
+          {/* Heading masqué en mini desktop */}
+          {(!isDesktop || !mini) && (
             <h6 className="navbar-heading text-muted">Side Parts</h6>
           )}
 
@@ -246,20 +269,48 @@ const Sidebar = (props) => {
               <NavItem key={key}>
                 <NavLink
                   href={item.href}
-                  title={mini ? item.label : undefined}
-                  className={mini ? "nav-link-mini" : ""}
+                  title={isDesktop && mini ? item.label : undefined}
+                  style={isDesktop ? linkStyle(mini) : {}}
                 >
-                  <i className={item.icon} />
-                  {!mini && item.label}
+                  <i className={item.icon} style={isDesktop ? iconStyle(mini) : {}} />
+                  {(!isDesktop || !mini) && item.label}
                 </NavLink>
               </NavItem>
             ))}
           </Nav>
+
         </Collapse>
       </Container>
     </Navbar>
   );
 };
+
+// ── Style helpers — utilisés uniquement sur desktop ───────────────────────────
+
+function linkStyle(mini) {
+  return {
+    display:        "flex",
+    alignItems:     "center",
+    justifyContent: mini ? "center" : "flex-start",
+    padding:        mini ? "0.65rem 0" : "0.65rem 1.5rem",
+    whiteSpace:     "nowrap",
+    overflow:       "hidden",
+    transition:     "padding 0.28s ease",
+  };
+}
+
+function iconStyle(mini) {
+  return {
+    fontSize:    "0.9375rem",
+    minWidth:    "1.5rem",
+    textAlign:   "center",
+    marginRight: mini ? "0" : "0.5rem",
+    transition:  "margin 0.28s ease",
+    flexShrink:  0,
+  };
+}
+
+// ── Prop types ────────────────────────────────────────────────────────────────
 
 Sidebar.defaultProps = { routes: [{}] };
 
