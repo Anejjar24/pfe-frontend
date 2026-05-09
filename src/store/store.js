@@ -3,6 +3,9 @@ import authReducer from './slices/authSlice';
 import dashboardReducer from './slices/dashboardSlice';
 import realtimeReducer from './slices/realtimeSlice';
 import stationsReducer from './slices/stationsSlice';
+import sensorsReducer from './slices/sensorsSlice';
+import alertsReducer from './slices/alertsSlice';
+import maintenanceReducer from './slices/maintenanceSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +13,9 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     realtime: realtimeReducer,
     stations: stationsReducer,
+    sensors: sensorsReducer,
+    alerts: alertsReducer,
+    maintenance: maintenanceReducer,
   },
 });
 

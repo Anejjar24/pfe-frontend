@@ -14,6 +14,8 @@ import {
   updateStationStatus,
 } from '../store/slices/dashboardSlice';
 import { selectAccessToken, selectUser } from '../store/slices/authSlice';
+import { sensorRealtimeUpdated } from '../store/slices/sensorsSlice';
+import { alertRealtimeReceived } from '../store/slices/alertsSlice';
 
 const SOCKET_URL = process.env.REACT_APP_WS_URL || 'http://localhost:3001';
 
@@ -51,11 +53,13 @@ export default function useSocket(enabled = true) {
 
     socket.on('sensor-update', (data) => {
       dispatch(sensorUpdateReceived(data));
+      dispatch(sensorRealtimeUpdated(data));
       dispatch(applySensorUpdate(data));
     });
 
     socket.on('alert-created', (data) => {
       dispatch(alertReceived(data));
+      dispatch(alertRealtimeReceived(data));
       dispatch(addDashboardAlert(data));
     });
 

@@ -2,6 +2,9 @@
 import Profile from "views/examples/Profile.js";
 import DashboardPage from "modules/dashboard/pages/DashboardPage";
 import StationsPage from "modules/stations/pages/StationsPage";
+import MonitoringPage from "modules/monitoring/pages/MonitoringPage";
+import AlertsPage from "modules/alerts/pages/AlertsPage";
+import MaintenancePage from "modules/maintenance/pages/MaintenancePage";
 import Login from "modules/auth/pages/Login";
 import Register from "modules/auth/pages/Register";
 import BuilderPage from "views/builder/BuilderPage";
@@ -19,7 +22,7 @@ var routes = [
     path: "/builder",
     name: "Automation Builder",
     icon: "ni ni-vector text-info",
-    component: <BuilderPage />,
+    component: <Test />,
     layout: "/admin",
   },
   {
@@ -27,6 +30,27 @@ var routes = [
     name: "Stations",
     icon: "ni ni-building text-success",
     component: <StationsPage />,
+    layout: "/admin",
+  },
+  {
+    path: "/monitoring",
+    name: "Monitoring",
+    icon: "ni ni-sound-wave text-info",
+    component: <MonitoringPage />,
+    layout: "/admin",
+  },
+  {
+    path: "/alerts",
+    name: "Alerts",
+    icon: "ni ni-bell-55 text-red",
+    component: <AlertsPage />,
+    layout: "/admin",
+  },
+  {
+    path: "/maintenance",
+    name: "Maintenance",
+    icon: "ni ni-settings text-warning",
+    component: <MaintenancePage />,
     layout: "/admin",
   },
   {
