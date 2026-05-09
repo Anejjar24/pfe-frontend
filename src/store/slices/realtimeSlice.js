@@ -43,6 +43,7 @@ const realtimeSlice = createSlice({
     stationStatusReceived: (state, action) => {
       pushEvent(state, { type: 'station-status', label: 'Station status update', payload: action.payload });
     },
+    resetRealtime: () => initialState,
   },
 });
 
@@ -52,6 +53,7 @@ export const {
   sensorUpdateReceived,
   alertReceived,
   stationStatusReceived,
+  resetRealtime,
 } = realtimeSlice.actions;
 
 export const selectRealtime = (state) => state.realtime;

@@ -16,6 +16,9 @@
 
 */
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import useLogout from "hooks/useLogout";
+import { selectUser } from "store/slices/authSlice";
 // reactstrap components
 import {
   DropdownMenu,
@@ -35,6 +38,12 @@ import {
 } from "reactstrap";
 
 const AdminNavbar = (props) => {
+  const user = useSelector(selectUser);
+  const logout = useLogout();
+  const displayName = user
+    ? `${user.firstname || ""} ${user.lastname || ""}`.trim() || user.email
+    : "AquaFlow User";
+
   return (
     <>
       <Navbar className="navbar-top navbar-dark" expand="md" id="navbar-main">
@@ -69,7 +78,7 @@ const AdminNavbar = (props) => {
                   </span>
                   <Media className="ml-2 d-none d-lg-block">
                     <span className="mb-0 text-sm font-weight-bold">
-                      Anejjar Ihssane
+                      {displayName}
                     </span>
                   </Media>
                 </Media>
@@ -95,7 +104,13 @@ const AdminNavbar = (props) => {
                   <span>Support</span>
                 </DropdownItem>
                 <DropdownItem divider />
-                <DropdownItem href="#pablo" onClick={(e) => e.preventDefault()}>
+                <DropdownItem
+                  href="#pablo"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    logout();
+                  }}
+                >
                   <i className="ni ni-user-run" />
                   <span>Logout</span>
                 </DropdownItem>

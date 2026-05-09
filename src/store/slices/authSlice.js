@@ -1,13 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authService } from '../../services/authService';
+import {
+  clearAuthSession,
+  getAccessToken,
+  getRefreshToken,
+  persistAuthSession,
+} from '../../services/authSession';
 
 const initialState = {
   user: null,
-  accessToken: localStorage.getItem('accessToken') || null,
-  refreshToken: localStorage.getItem('refreshToken') || null,
+  accessToken: getAccessToken() || null,
+  refreshToken: getRefreshToken() || null,
   isLoading: false,
   error: null,
-  isAuthenticated: !!localStorage.getItem('accessToken'),
+  isAuthenticated: !!getAccessToken(),
 };
 
 // Async thunks
@@ -16,8 +22,10 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const response = await authService.login({ email, password });
-      localStorage.setItem('accessToken', response.access_token);
-      localStorage.setItem('refreshToken', response.refresh_token);
+      persistAuthSession({
+        accessToken: response.access_token,
+        refreshToken: response.refresh_token,
+      });
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
@@ -35,8 +43,10 @@ export const registerUser = createAsyncThunk(
         firstname,
         lastname,
       });
-      localStorage.setItem('accessToken', response.access_token);
-      localStorage.setItem('refreshToken', response.refresh_token);
+      persistAuthSession({
+        accessToken: response.access_token,
+        refreshToken: response.refresh_token,
+      });
       return response;
     } catch (error) {
       return rejectWithValue(
@@ -47,8 +57,7 @@ export const registerUser = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
+  await authService.logout();
   return null;
 });
 
@@ -63,8 +72,7 @@ export const verifyUser = createAsyncThunk(
       const response = await authService.getCurrentUser();
       return response;
     } catch (error) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      clearAuthSession('verify-failed');
       return rejectWithValue('Session expired');
     }
   }
@@ -75,6 +83,14 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     clearError: (state) => {
+      state.error = null;
+    },
+    clientSessionCleared: (state) => {
+      state.user = null;
+      state.accessToken = null;
+      state.refreshToken = null;
+      state.isAuthenticated = false;
+      state.isLoading = false;
       state.error = null;
     },
   },
@@ -150,7 +166,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, clientSessionCleared } = authSlice.actions;
 
 // Selectors
 export const selectAuth = (state) => state.auth;

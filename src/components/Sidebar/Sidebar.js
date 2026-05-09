@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { NavLink as NavLinkRRD, Link } from "react-router-dom";
 import { PropTypes } from "prop-types";
+import useLogout from "hooks/useLogout";
 import {
   Collapse,
   DropdownMenu,
@@ -29,6 +30,7 @@ const SIDEBAR_MINI = 68;  // px — icon-only
 const MD_BREAKPOINT = 768;
 
 const Sidebar = (props) => {
+  const logout = useLogout();
   const [collapseOpen, setCollapseOpen] = useState(false);
   const [mini, setMini]                 = useState(false);
   const [isDesktop, setIsDesktop]       = useState(
@@ -189,7 +191,13 @@ const Sidebar = (props) => {
                 <i className="ni ni-support-16" /><span>Support</span>
               </DropdownItem>
               <DropdownItem divider />
-              <DropdownItem href="#pablo" onClick={(e) => e.preventDefault()}>
+              <DropdownItem
+                href="#pablo"
+                onClick={(e) => {
+                  e.preventDefault();
+                  logout();
+                }}
+              >
                 <i className="ni ni-user-run" /><span>Logout</span>
               </DropdownItem>
             </DropdownMenu>
@@ -256,6 +264,23 @@ const Sidebar = (props) => {
           <Nav navbar>{createLinks(routes)}</Nav>
 
           <hr className="my-3" />
+
+          <Nav navbar className="mb-2">
+            <NavItem>
+              <NavLink
+                href="#pablo"
+                onClick={(e) => {
+                  e.preventDefault();
+                  logout();
+                }}
+                title={isDesktop && mini ? "Logout" : undefined}
+                style={isDesktop ? linkStyle(mini) : {}}
+              >
+                <i className="ni ni-user-run text-red" style={isDesktop ? iconStyle(mini) : {}} />
+                {(!isDesktop || !mini) && <span>Logout</span>}
+              </NavLink>
+            </NavItem>
+          </Nav>
 
           {/* Heading masqué en mini desktop */}
           {(!isDesktop || !mini) && (

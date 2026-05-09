@@ -1,4 +1,9 @@
 import apiClient from './apiClient';
+import {
+  clearAuthSession,
+  getAccessToken,
+  persistAuthSession,
+} from './authSession';
 
 export const authService = {
   async login(credentials) {
@@ -12,9 +17,13 @@ export const authService = {
   },
 
   async logout() {
-    await apiClient.post('/auth/logout');
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    try {
+      await apiClient.post('/auth/logout');
+    } catch (error) {
+      // Local session cleanup must still complete if the token is already expired.
+    } finally {
+      clearAuthSession('logout');
+    }
   },
 
   async getCurrentUser() {
@@ -23,22 +32,22 @@ export const authService = {
   },
 
   getAccessToken() {
-    return localStorage.getItem('accessToken');
+    return getAccessToken();
   },
 
   setAccessToken(token) {
     if (token) {
-      localStorage.setItem('accessToken', token);
+      persistAuthSession({ accessToken: token });
     } else {
-      localStorage.removeItem('accessToken');
+      clearAuthSession('access-token-cleared');
     }
   },
 
   setRefreshToken(token) {
     if (token) {
-      localStorage.setItem('refreshToken', token);
+      persistAuthSession({ refreshToken: token });
     } else {
-      localStorage.removeItem('refreshToken');
+      clearAuthSession('refresh-token-cleared');
     }
   },
 
@@ -47,7 +56,6 @@ export const authService = {
   },
 
   clearTokens() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    clearAuthSession('tokens-cleared');
   },
 };
