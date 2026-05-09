@@ -1,11 +1,11 @@
 
 import Profile from "views/examples/Profile.js";
 import DashboardPage from "modules/dashboard/pages/DashboardPage";
-import LoginPage from "modules/auth/pages/LoginPage";
-import RegisterPage from "modules/auth/pages/RegisterPage";
+import Login from "modules/auth/pages/Login";
+import Register from "modules/auth/pages/Register";
 import BuilderPage from "views/builder/BuilderPage";
 import Test from "views/test.js";
-import Login from "views/examples/Login.js";
+
 var routes = [
   {
     path: "/dashboard",
@@ -60,37 +60,16 @@ var routes = [
     path: "/login",
     name: "Login",
     icon: "ni ni-key-25 text-info",
-    component: <LoginPage />,
+    component: <Login />,
     layout: "/auth",
   },
   {
     path: "/register",
     name: "Register",
     icon: "ni ni-circle-08 text-pink",
-    component: <RegisterPage />,
+    component: <Register/>,
     layout: "/auth",
-  },
-  {
-    path: "/login1",
-    name: "Login1",
-    icon: "ni ni-key-25 text-info",
-    component: <Login />,
-    layout: "/auth",
-  },
-  {
-    path: "/register1",
-    name: "Register1",
-    icon: "ni ni-circle-08 text-pink",
-    component: <Login />,
-    layout: "/auth",
-  },
-
-  // {
-  //   path: "/Logigramme",
-  //   name: "Logigramme",
-  //   icon: "ni ni-tv-2 text-primary",
-  //   component: <Logigramme />,
-  //   layout: "/admin",
-  // },
+  }
+  
 ];
 export default routes;

@@ -72,7 +72,9 @@ const Sidebar = (props) => {
   const closeCollapse  = () => setCollapseOpen(false);
 
   const createLinks = (routes) =>
-    routes.map((prop, key) => (
+  routes
+    .filter((prop) => prop.layout === "/admin")
+    .map((prop, key) => (
       <NavItem key={key}>
         <NavLink
           to={prop.layout + prop.path}
