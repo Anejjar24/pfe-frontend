@@ -1,6 +1,7 @@
 
 import Profile from "views/examples/Profile.js";
 import DashboardPage from "modules/dashboard/pages/DashboardPage";
+import StationsPage from "modules/stations/pages/StationsPage";
 import Login from "modules/auth/pages/Login";
 import Register from "modules/auth/pages/Register";
 import BuilderPage from "views/builder/BuilderPage";
@@ -19,6 +20,13 @@ var routes = [
     name: "Automation Builder",
     icon: "ni ni-vector text-info",
     component: <BuilderPage />,
+    layout: "/admin",
+  },
+  {
+    path: "/stations",
+    name: "Stations",
+    icon: "ni ni-building text-success",
+    component: <StationsPage />,
     layout: "/admin",
   },
   {
