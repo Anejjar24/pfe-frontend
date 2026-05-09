@@ -45,7 +45,7 @@ export default function LoginForm() {
 
     const result = await dispatch(loginUser(formData));
     if (loginUser.fulfilled.match(result)) {
-      navigate('/dashboard');
+      navigate('/admin/dashboard');
     }
   };
 
@@ -106,7 +106,7 @@ export default function LoginForm() {
       <div className="text-center">
         <p className="text-muted mb-0">
           Don't have an account?{' '}
-          <Link to="/register" className="text-primary">
+          <Link to="/auth/register" className="text-primary">
             Register here
           </Link>
         </p>

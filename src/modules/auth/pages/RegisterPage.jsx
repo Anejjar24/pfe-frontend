@@ -12,7 +12,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/admin/dashboard');
     }
   }, [isAuthenticated, navigate]);
 

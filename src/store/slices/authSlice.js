@@ -142,6 +142,9 @@ const authSlice = createSlice({
       })
       .addCase(verifyUser.rejected, (state) => {
         state.isLoading = false;
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
         state.isAuthenticated = false;
       });
   },

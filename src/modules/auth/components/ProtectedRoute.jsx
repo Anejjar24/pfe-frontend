@@ -7,7 +7,7 @@ export default function ProtectedRoute({ children }) {
   const isAuthenticated = useSelector(selectIsAuthenticated);
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth/login" replace />;
   }
 
   return children;

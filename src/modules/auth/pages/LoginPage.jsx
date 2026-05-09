@@ -12,25 +12,15 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/admin/dashboard');
     }
   }, [isAuthenticated, navigate]);
 
   return (
     <div className="auth-page">
-      <Container>
-        <Row className="vh-100 align-items-center">
-          <Col md="6" lg="5" className="mx-auto">
-            <div className="auth-header mb-4">
-              <h1 className="text-center mb-2">AquaFlow</h1>
-              <p className="text-center text-muted">
-                Industrial Water Station Supervision
-              </p>
-            </div>
+      
             <LoginForm />
-          </Col>
-        </Row>
-      </Container>
+        
     </div>
   );
 }

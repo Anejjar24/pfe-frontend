@@ -49,7 +49,7 @@ export default function RegisterForm() {
       })
     );
     if (registerUser.fulfilled.match(result)) {
-      navigate('/dashboard');
+      navigate('/admin/dashboard');
     }
   };
 
@@ -139,7 +139,7 @@ export default function RegisterForm() {
       <div className="text-center">
         <p className="text-muted mb-0">
           Already have an account?{' '}
-          <Link to="/login" className="text-primary">
+          <Link to="/auth/login" className="text-primary">
             Login here
           </Link>
         </p>
