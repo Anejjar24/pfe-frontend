@@ -22,7 +22,7 @@ var routes = [
     path: "/builder",
     name: "Automation Builder",
     icon: "ni ni-vector text-info",
-    component: <Test />,
+    component: <BuilderPage />,
     layout: "/admin",
   },
   {
