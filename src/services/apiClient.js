@@ -1,5 +1,10 @@
 import axios from 'axios';
-import { clearAuthSession, getAccessToken } from './authSession';
+import {
+  clearAuthSession,
+  getAccessToken,
+  getRefreshToken,
+  persistAuthSession,
+} from './authSession';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -34,26 +39,39 @@ apiClient.interceptors.response.use(
     const requestUrl = originalRequest?.url || '';
     const isAuthRequest =
       requestUrl.includes('/auth/login') ||
-      requestUrl.includes('/auth/register');
+      requestUrl.includes('/auth/register') ||
+      requestUrl.includes('/auth/refresh');
 
     // If 401 and not already retried, try to refresh token
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isAuthRequest) {
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = getRefreshToken();
         if (!refreshToken) {
-          // No refresh token, redirect to login
           clearAuthSession('missing-refresh-token');
           window.location.href = '/#/auth/login';
           return Promise.reject(error);
         }
 
-        // This would call a refresh endpoint if implemented on backend
-        // For now, redirect to login
-        clearAuthSession('expired-token');
-        window.location.href = '/#/auth/login';
-        return Promise.reject(error);
+        const refreshResponse = await axios.post(`${API_URL}/auth/refresh`, {
+          refresh_token: refreshToken,
+        });
+        const nextAccessToken = refreshResponse.data?.access_token;
+        const nextRefreshToken = refreshResponse.data?.refresh_token;
+
+        if (!nextAccessToken) {
+          clearAuthSession('refresh-token-missing-access-token');
+          window.location.href = '/#/auth/login';
+          return Promise.reject(error);
+        }
+
+        persistAuthSession({
+          accessToken: nextAccessToken,
+          refreshToken: nextRefreshToken || refreshToken,
+        });
+        originalRequest.headers.Authorization = `Bearer ${nextAccessToken}`;
+        return apiClient(originalRequest);
       } catch (refreshError) {
         clearAuthSession('auth-refresh-failed');
         window.location.href = '/#/auth/login';

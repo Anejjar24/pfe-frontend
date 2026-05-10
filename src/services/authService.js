@@ -31,6 +31,13 @@ export const authService = {
     return response.data;
   },
 
+  async refresh(refreshToken) {
+    const response = await apiClient.post('/auth/refresh', {
+      refresh_token: refreshToken,
+    });
+    return response.data;
+  },
+
   getAccessToken() {
     return getAccessToken();
   },

@@ -33,6 +33,7 @@ import {
   setStationFilters,
   updateStation,
 } from '../../../store/slices/stationsSlice';
+import { selectUserRole } from '../../../store/slices/authSlice';
 
 const STATUS_COLORS = {
   normal: 'success',
@@ -61,6 +62,8 @@ export default function StationsPage() {
   const isLoading = useSelector(selectStationsLoading);
   const isSaving = useSelector(selectStationsSaving);
   const error = useSelector(selectStationsError);
+  const userRole = useSelector(selectUserRole);
+  const canManageStations = ['admin', 'operator'].includes(userRole);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingStation, setEditingStation] = useState(null);
   const [form, setForm] = useState(initialForm);
@@ -182,10 +185,12 @@ export default function StationsPage() {
                     <p className="text-sm text-muted mb-0">Manage supervised water stations and operational status.</p>
                   </Col>
                   <Col className="text-right" xs="12" md="3">
-                    <Button color="primary" size="sm" onClick={openCreate}>
-                      <i className="ni ni-fat-add mr-2" />
-                      New Station
-                    </Button>
+                    {canManageStations && (
+                      <Button color="primary" size="sm" onClick={openCreate}>
+                        <i className="ni ni-fat-add mr-2" />
+                        New Station
+                      </Button>
+                    )}
                   </Col>
                 </Row>
               </CardHeader>
@@ -252,14 +257,16 @@ export default function StationsPage() {
                         <td>
                           <Badge color={STATUS_COLORS[station.status] || 'secondary'}>{station.status}</Badge>
                         </td>
-                        <td>
-                          {station.capacity} {station.capacityUnit}
-                        </td>
+                        <td>{Number(station.capacity).toLocaleString()} {station.capacityUnit}</td>
                         <td>{station.sensors?.length || 0}</td>
                         <td className="text-right">
-                          <Button color="info" size="sm" onClick={() => openEdit(station)}>
-                            Edit
-                          </Button>
+                          {canManageStations ? (
+                            <Button color="info" size="sm" onClick={() => openEdit(station)}>
+                              Edit
+                            </Button>
+                          ) : (
+                            <span className="text-muted text-sm">Read only</span>
+                          )}
                         </td>
                       </tr>
                     ))

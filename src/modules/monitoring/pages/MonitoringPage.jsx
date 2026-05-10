@@ -20,6 +20,7 @@ import {
   Table,
 } from 'reactstrap';
 import useSocket from '../../../hooks/useSocket';
+import { selectUserRole } from '../../../store/slices/authSlice';
 import {
   createSensor,
   fetchSensors,
@@ -56,6 +57,8 @@ export default function MonitoringPage() {
   const stations = useSelector(selectStations);
   const isLoading = useSelector(selectSensorsLoading);
   const error = useSelector(selectSensorsError);
+  const userRole = useSelector(selectUserRole);
+  const canManageSensors = ['admin', 'operator'].includes(userRole);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
   useSocket(true);
@@ -104,10 +107,12 @@ export default function MonitoringPage() {
               <p className="text-white-50 mb-0">Live sensor inventory and latest readings.</p>
             </Col>
             <Col className="text-right" xs="12" md="3">
-              <Button color="default" size="sm" onClick={openCreate} disabled={!stations.length}>
-                <i className="ni ni-fat-add mr-2" />
-                New Sensor
-              </Button>
+              {canManageSensors && (
+                <Button color="default" size="sm" onClick={openCreate} disabled={!stations.length}>
+                  <i className="ni ni-fat-add mr-2" />
+                  New Sensor
+                </Button>
+              )}
             </Col>
           </Row>
         </Container>
@@ -142,7 +147,12 @@ export default function MonitoringPage() {
                     <td>{sensor.station?.name || '-'}</td>
                     <td className="text-capitalize">{sensor.type}</td>
                     <td><Badge color={STATUS_COLORS[sensor.status] || 'secondary'}>{sensor.status}</Badge></td>
-                    <td>{sensor.lastReading ?? '-'} {sensor.unit}</td>
+                    <td>
+                      {sensor.lastReading === null || sensor.lastReading === undefined
+                        ? '-'
+                        : Number(sensor.lastReading).toLocaleString(undefined, { maximumFractionDigits: 2 })}{' '}
+                      {sensor.lastReading === null || sensor.lastReading === undefined ? '' : sensor.unit}
+                    </td>
                     <td>{sensor.minThreshold ?? '-'} / {sensor.maxThreshold ?? '-'}</td>
                   </tr>
                 ))

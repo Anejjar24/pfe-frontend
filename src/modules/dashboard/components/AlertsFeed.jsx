@@ -2,8 +2,11 @@ import { Badge, Card, CardBody, CardHeader, ListGroup, ListGroupItem } from 'rea
 
 const SEVERITY_COLORS = {
   critical: 'danger',
+  error: 'danger',
+  warning: 'warning',
   high: 'warning',
   medium: 'info',
+  info: 'info',
   low: 'success',
 };
 
@@ -30,6 +33,11 @@ export default function AlertsFeed({ alerts }) {
               </div>
             </ListGroupItem>
           ))}
+          {alerts.length === 0 && (
+            <ListGroupItem className="px-4 text-sm text-muted">
+              No active alerts.
+            </ListGroupItem>
+          )}
         </ListGroup>
       </CardBody>
     </Card>

@@ -26,7 +26,9 @@ export default function StationOverview({ stations }) {
           </thead>
           <tbody>
             {stations.map((station) => {
-              const onlinePercent = Math.round((station.sensorsOnline / station.sensorsTotal) * 100);
+              const onlinePercent = station.sensorsTotal
+                ? Math.round((station.sensorsOnline / station.sensorsTotal) * 100)
+                : 0;
               return (
                 <tr key={station.id}>
                   <th scope="row">
@@ -36,8 +38,8 @@ export default function StationOverview({ stations }) {
                   <td>
                     <Badge color={STATUS_COLORS[station.status] || 'secondary'}>{station.status}</Badge>
                   </td>
-                  <td>{station.pressure} bar</td>
-                  <td>{station.flow} m3/h</td>
+                  <td>{station.pressure === null ? '-' : `${Number(station.pressure).toFixed(1)} bar`}</td>
+                  <td>{station.flow === null ? '-' : `${Math.round(Number(station.flow)).toLocaleString()} m3/h`}</td>
                   <td>
                     <div className="d-flex align-items-center">
                       <span className="mr-2 text-sm">{station.sensorsOnline}/{station.sensorsTotal}</span>
@@ -49,6 +51,13 @@ export default function StationOverview({ stations }) {
                 </tr>
               );
             })}
+            {stations.length === 0 && (
+              <tr>
+                <td colSpan="5" className="text-center text-muted py-4">
+                  No station data available.
+                </td>
+              </tr>
+            )}
           </tbody>
         </Table>
       </CardBody>

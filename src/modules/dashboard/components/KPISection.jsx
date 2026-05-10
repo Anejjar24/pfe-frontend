@@ -29,10 +29,10 @@ export default function KPISection({ kpis }) {
                 </Col>
               </Row>
               <p className="mt-3 mb-0 text-muted text-sm">
-                <span className={kpi.trend?.startsWith('+') ? 'text-success mr-2' : 'text-warning mr-2'}>
-                  <i className={kpi.trend?.startsWith('+') ? 'fa fa-arrow-up' : 'fa fa-arrow-down'} /> {kpi.trend}
+                <span className={kpi.status === 'normal' ? 'text-success mr-2' : 'text-warning mr-2'}>
+                  <i className={kpi.status === 'normal' ? 'fa fa-check' : 'fa fa-exclamation-triangle'} /> {kpi.trend}
                 </span>
-                <span className="text-nowrap">since last hour</span>
+                <span className="text-nowrap">from live database</span>
               </p>
             </CardBody>
           </Card>

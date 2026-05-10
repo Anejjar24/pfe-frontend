@@ -9,6 +9,7 @@ import {
   selectAlertsError,
   selectAlertsLoading,
 } from '../../../store/slices/alertsSlice';
+import { selectUserRole } from '../../../store/slices/authSlice';
 
 const SEVERITY_COLORS = {
   info: 'info',
@@ -29,6 +30,8 @@ export default function AlertsPage() {
   const alerts = useSelector(selectAlerts);
   const isLoading = useSelector(selectAlertsLoading);
   const error = useSelector(selectAlertsError);
+  const userRole = useSelector(selectUserRole);
+  const canManageAlerts = ['admin', 'operator', 'technician'].includes(userRole);
 
   useEffect(() => {
     dispatch(fetchAlerts());
@@ -71,12 +74,18 @@ export default function AlertsPage() {
                     <td><Badge color={STATUS_COLORS[alert.status] || 'secondary'}>{alert.status}</Badge></td>
                     <td>{alert.createdAt ? new Date(alert.createdAt).toLocaleString() : '-'}</td>
                     <td className="text-right">
-                      <Button size="sm" color="warning" disabled={alert.status !== 'active'} onClick={() => dispatch(acknowledgeAlert(alert.id))}>
-                        Ack
-                      </Button>
-                      <Button size="sm" color="success" className="ml-2" disabled={alert.status === 'resolved'} onClick={() => dispatch(resolveAlert(alert.id))}>
-                        Resolve
-                      </Button>
+                      {canManageAlerts ? (
+                        <>
+                          <Button size="sm" color="warning" disabled={alert.status !== 'active'} onClick={() => dispatch(acknowledgeAlert(alert.id))}>
+                            Ack
+                          </Button>
+                          <Button size="sm" color="success" className="ml-2" disabled={alert.status === 'resolved'} onClick={() => dispatch(resolveAlert(alert.id))}>
+                            Resolve
+                          </Button>
+                        </>
+                      ) : (
+                        <span className="text-muted text-sm">Read only</span>
+                      )}
                     </td>
                   </tr>
                 ))
