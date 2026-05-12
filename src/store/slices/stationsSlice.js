@@ -87,6 +87,14 @@ const stationsSlice = createSlice({
     clearStationsError: (state) => {
       state.error = null;
     },
+    stationRealtimeUpdated: (state, action) => {
+      const { stationId, status, name } = action.payload || {};
+      const idx = state.items.findIndex((s) => s.id === stationId);
+      if (idx >= 0) {
+        if (status) state.items[idx].status = status;
+        if (name) state.items[idx].name = name;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -142,7 +150,7 @@ const stationsSlice = createSlice({
   },
 });
 
-export const { clearStationsError, setStationFilters } = stationsSlice.actions;
+export const { clearStationsError, setStationFilters, stationRealtimeUpdated } = stationsSlice.actions;
 
 export const selectStations = (state) => state.stations.items;
 export const selectStationsMeta = (state) => state.stations.meta;

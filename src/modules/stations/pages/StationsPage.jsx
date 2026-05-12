@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import useSocket from '../../../hooks/useSocket';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Alert,
@@ -64,6 +65,7 @@ export default function StationsPage() {
   const error = useSelector(selectStationsError);
   const userRole = useSelector(selectUserRole);
   const canManageStations = ['admin', 'operator'].includes(userRole);
+  useSocket(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingStation, setEditingStation] = useState(null);
   const [form, setForm] = useState(initialForm);
