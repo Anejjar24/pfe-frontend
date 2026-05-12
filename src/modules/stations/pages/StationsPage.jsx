@@ -33,6 +33,7 @@ import {
   selectStationsSaving,
   setStationFilters,
   updateStation,
+  deleteStation,
 } from '../../../store/slices/stationsSlice';
 import { selectUserRole } from '../../../store/slices/authSlice';
 
@@ -139,6 +140,12 @@ export default function StationsPage() {
     }
 
     setModalOpen(false);
+  };
+
+  const handleDelete = (station) => {
+    if (window.confirm(`Delete "${station.name}"? This cannot be undone.`)) {
+      dispatch(deleteStation(station.id));
+    }
   };
 
   return (
@@ -263,9 +270,16 @@ export default function StationsPage() {
                         <td>{station.sensors?.length || 0}</td>
                         <td className="text-right">
                           {canManageStations ? (
-                            <Button color="info" size="sm" onClick={() => openEdit(station)}>
-                              Edit
-                            </Button>
+                            <>
+                              <Button color="info" size="sm" onClick={() => openEdit(station)}>
+                                Edit
+                              </Button>
+                              {userRole === 'admin' && (
+                                <Button color="danger" size="sm" className="ml-2" onClick={() => handleDelete(station)}>
+                                  Delete
+                                </Button>
+                              )}
+                            </>
                           ) : (
                             <span className="text-muted text-sm">Read only</span>
                           )}

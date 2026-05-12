@@ -73,6 +73,7 @@ export default function MaintenancePage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [form, setForm] = useState(initialForm);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     dispatch(fetchMaintenance());
@@ -120,9 +121,12 @@ export default function MaintenancePage() {
   };
 
   const handleDelete = (item) => {
-    if (window.confirm(`Delete work order "${item.title}"? This cannot be undone.`)) {
-      dispatch(deleteMaintenance(item.id));
-    }
+    setDeleteTarget(item);
+  };
+
+  const confirmDelete = () => {
+    dispatch(deleteMaintenance(deleteTarget.id));
+    setDeleteTarget(null);
   };
 
   return (
@@ -218,6 +222,39 @@ export default function MaintenancePage() {
           </Table>
         </Card>
       </Container>
+
+      <Modal isOpen={!!deleteTarget} toggle={() => setDeleteTarget(null)}>
+        <ModalHeader toggle={() => setDeleteTarget(null)}>
+          <span className="text-danger">
+            <i className="ni ni-fat-remove mr-2" />
+            Delete Work Order
+          </span>
+        </ModalHeader>
+        <ModalBody>
+          <p className="mb-1">
+            Are you sure you want to delete this work order?
+          </p>
+          <p className="font-weight-bold mb-0">
+            {deleteTarget?.title}
+          </p>
+          {deleteTarget?.station && (
+            <p className="text-muted text-sm mb-0">
+              Station: {deleteTarget.station.name}
+            </p>
+          )}
+          <p className="text-danger text-sm mt-3 mb-0">
+            This action cannot be undone.
+          </p>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => setDeleteTarget(null)}>
+            Cancel
+          </Button>
+          <Button color="danger" onClick={confirmDelete} disabled={isSaving}>
+            {isSaving ? 'Deleting...' : 'Delete'}
+          </Button>
+        </ModalFooter>
+      </Modal>
 
       <Modal isOpen={modalOpen} toggle={() => setModalOpen(false)} size="lg">
         <Form onSubmit={handleSubmit}>
