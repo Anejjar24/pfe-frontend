@@ -1,12 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Badge, Card, CardHeader, Container, Spinner, Table } from 'reactstrap';
 import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Col,
+  Container,
+  Form,
+  FormGroup,
+  Input,
+  Label,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  Row,
+  Spinner,
+  Table,
+} from 'reactstrap';
+import { selectUserRole } from '../../../store/slices/authSlice';
+import {
+  createMaintenance,
+  deleteMaintenance,
   fetchMaintenance,
   selectMaintenanceError,
   selectMaintenanceItems,
   selectMaintenanceLoading,
+  selectMaintenanceSaving,
+  updateMaintenance,
 } from '../../../store/slices/maintenanceSlice';
+import { fetchStations, selectStations } from '../../../store/slices/stationsSlice';
 
 const PRIORITY_COLORS = {
   low: 'success',
@@ -23,29 +47,110 @@ const STATUS_COLORS = {
   on_hold: 'dark',
 };
 
+const initialForm = {
+  title: '',
+  type: 'preventive',
+  priority: 'medium',
+  status: 'scheduled',
+  stationId: '',
+  description: '',
+  scheduledDate: '',
+};
+
 export default function MaintenancePage() {
   const dispatch = useDispatch();
   const items = useSelector(selectMaintenanceItems);
+  const stations = useSelector(selectStations);
   const isLoading = useSelector(selectMaintenanceLoading);
+  const isSaving = useSelector(selectMaintenanceSaving);
   const error = useSelector(selectMaintenanceError);
+  const userRole = useSelector(selectUserRole);
+
+  const canCreate = ['admin', 'operator', 'technician'].includes(userRole);
+  const canEdit = ['admin', 'operator', 'technician'].includes(userRole);
+  const canDelete = userRole === 'admin';
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [form, setForm] = useState(initialForm);
 
   useEffect(() => {
     dispatch(fetchMaintenance());
+    dispatch(fetchStations());
   }, [dispatch]);
+
+  const openCreate = () => {
+    setEditingItem(null);
+    setForm({ ...initialForm, stationId: stations[0]?.id || '' });
+    setModalOpen(true);
+  };
+
+  const openEdit = (item) => {
+    setEditingItem(item);
+    setForm({
+      title: item.title || '',
+      type: item.type || 'preventive',
+      priority: item.priority || 'medium',
+      status: item.status || 'scheduled',
+      stationId: item.station?.id || '',
+      description: item.description || '',
+      scheduledDate: item.scheduledDate ? item.scheduledDate.slice(0, 10) : '',
+    });
+    setModalOpen(true);
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const payload = {
+      ...form,
+      scheduledDate: form.scheduledDate || undefined,
+    };
+
+    if (editingItem) {
+      await dispatch(updateMaintenance({ id: editingItem.id, payload }));
+    } else {
+      await dispatch(createMaintenance(payload));
+    }
+    setModalOpen(false);
+  };
+
+  const handleDelete = (item) => {
+    if (window.confirm(`Delete work order "${item.title}"? This cannot be undone.`)) {
+      dispatch(deleteMaintenance(item.id));
+    }
+  };
 
   return (
     <>
       <div className="header bg-gradient-warning pb-8 pt-5 pt-md-8">
         <Container fluid>
-          <h1 className="text-white mb-0">Maintenance</h1>
-          <p className="text-white-50 mb-0">Interventions, inspections, and repair tracking.</p>
+          <Row className="align-items-center">
+            <Col>
+              <h1 className="text-white mb-0">Maintenance</h1>
+              <p className="text-white-50 mb-0">Interventions, inspections, and repair tracking.</p>
+            </Col>
+            <Col className="text-right" xs="12" md="3">
+              {canCreate && (
+                <Button color="default" size="sm" onClick={openCreate}>
+                  <i className="ni ni-fat-add mr-2" />
+                  New Work Order
+                </Button>
+              )}
+            </Col>
+          </Row>
         </Container>
       </div>
+
       <Container className="mt--7" fluid>
         <Card className="shadow">
           <CardHeader className="border-0">
             <h3 className="mb-0">Maintenance Work Orders</h3>
-            {error && <p className="text-danger text-sm mb-0">{error}</p>}
+            {error && <p className="text-danger text-sm mb-0 mt-1">{error}</p>}
           </CardHeader>
           <Table className="align-items-center table-flush" responsive>
             <thead className="thead-light">
@@ -56,29 +161,164 @@ export default function MaintenancePage() {
                 <th>Priority</th>
                 <th>Status</th>
                 <th>Scheduled</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan="6" className="text-center py-5"><Spinner color="primary" /></td></tr>
+                <tr>
+                  <td colSpan="7" className="text-center py-5">
+                    <Spinner color="warning" />
+                  </td>
+                </tr>
               ) : items.length ? (
                 items.map((item) => (
                   <tr key={item.id}>
                     <th scope="row">{item.title}</th>
                     <td>{item.station?.name || '-'}</td>
-                    <td className="text-capitalize">{item.type}</td>
-                    <td><Badge color={PRIORITY_COLORS[item.priority] || 'secondary'}>{item.priority}</Badge></td>
-                    <td><Badge color={STATUS_COLORS[item.status] || 'secondary'}>{item.status}</Badge></td>
-                    <td>{item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString() : '-'}</td>
+                    <td className="text-capitalize">{item.type?.replace('_', ' ')}</td>
+                    <td>
+                      <Badge color={PRIORITY_COLORS[item.priority] || 'secondary'}>
+                        {item.priority}
+                      </Badge>
+                    </td>
+                    <td>
+                      <Badge color={STATUS_COLORS[item.status] || 'secondary'}>
+                        {item.status?.replace('_', ' ')}
+                      </Badge>
+                    </td>
+                    <td>
+                      {item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="text-right">
+                      {canEdit && (
+                        <Button size="sm" color="info" onClick={() => openEdit(item)}>
+                          Edit
+                        </Button>
+                      )}
+                      {canDelete && (
+                        <Button size="sm" color="danger" className="ml-2" onClick={() => handleDelete(item)}>
+                          Delete
+                        </Button>
+                      )}
+                      {!canEdit && !canDelete && (
+                        <span className="text-muted text-sm">Read only</span>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="6" className="text-center text-muted py-5">No maintenance records found.</td></tr>
+                <tr>
+                  <td colSpan="7" className="text-center text-muted py-5">
+                    No maintenance records found.
+                  </td>
+                </tr>
               )}
             </tbody>
           </Table>
         </Card>
       </Container>
+
+      <Modal isOpen={modalOpen} toggle={() => setModalOpen(false)} size="lg">
+        <Form onSubmit={handleSubmit}>
+          <ModalHeader toggle={() => setModalOpen(false)}>
+            {editingItem ? 'Edit Work Order' : 'New Work Order'}
+          </ModalHeader>
+          <ModalBody>
+            <FormGroup>
+              <Label>Title</Label>
+              <Input
+                name="title"
+                value={form.title}
+                onChange={handleInputChange}
+                required
+                placeholder="e.g. Quarterly pump inspection"
+              />
+            </FormGroup>
+            <Row>
+              <Col md="6">
+                <FormGroup>
+                  <Label>Type</Label>
+                  <Input type="select" name="type" value={form.type} onChange={handleInputChange}>
+                    <option value="preventive">Preventive</option>
+                    <option value="corrective">Corrective</option>
+                    <option value="inspection">Inspection</option>
+                    <option value="repair">Repair</option>
+                    <option value="replacement">Replacement</option>
+                    <option value="calibration">Calibration</option>
+                  </Input>
+                </FormGroup>
+              </Col>
+              <Col md="6">
+                <FormGroup>
+                  <Label>Priority</Label>
+                  <Input type="select" name="priority" value={form.priority} onChange={handleInputChange}>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </Input>
+                </FormGroup>
+              </Col>
+            </Row>
+            <Row>
+              <Col md="6">
+                <FormGroup>
+                  <Label>Status</Label>
+                  <Input type="select" name="status" value={form.status} onChange={handleInputChange}>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="on_hold">On Hold</option>
+                  </Input>
+                </FormGroup>
+              </Col>
+              <Col md="6">
+                <FormGroup>
+                  <Label>Station</Label>
+                  <Input type="select" name="stationId" value={form.stationId} onChange={handleInputChange}>
+                    <option value="">No station</option>
+                    {stations.map((station) => (
+                      <option key={station.id} value={station.id}>
+                        {station.name}
+                      </option>
+                    ))}
+                  </Input>
+                </FormGroup>
+              </Col>
+            </Row>
+            <FormGroup>
+              <Label>Scheduled Date</Label>
+              <Input
+                type="date"
+                name="scheduledDate"
+                value={form.scheduledDate}
+                onChange={handleInputChange}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Description</Label>
+              <Input
+                type="textarea"
+                name="description"
+                rows="3"
+                value={form.description}
+                onChange={handleInputChange}
+                placeholder="Describe the work to be done..."
+              />
+            </FormGroup>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="secondary" type="button" onClick={() => setModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button color="primary" type="submit" disabled={isSaving}>
+              {isSaving ? 'Saving...' : editingItem ? 'Update Work Order' : 'Create Work Order'}
+            </Button>
+          </ModalFooter>
+        </Form>
+      </Modal>
     </>
   );
 }

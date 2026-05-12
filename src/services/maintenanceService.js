@@ -15,6 +15,11 @@ export const maintenanceService = {
     const response = await apiClient.patch(`/maintenance/${id}`, payload);
     return response.data;
   },
+
+  async deleteMaintenance(id) {
+    const response = await apiClient.delete(`/maintenance/${id}`);
+    return response.data;
+  },
 };
 
 export default maintenanceService;
