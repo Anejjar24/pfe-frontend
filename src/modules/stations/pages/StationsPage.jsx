@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useSocket from '../../../hooks/useSocket';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -58,6 +59,7 @@ const initialForm = {
 
 export default function StationsPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const stations = useSelector(selectStations);
   const meta = useSelector(selectStationsMeta);
   const filters = useSelector(selectStationsFilters);
@@ -269,9 +271,12 @@ export default function StationsPage() {
                         <td>{Number(station.capacity).toLocaleString()} {station.capacityUnit}</td>
                         <td>{station.sensors?.length || 0}</td>
                         <td className="text-right">
-                          {canManageStations ? (
+                          <Button color="default" size="sm" onClick={() => navigate(`/admin/stations/${station.id}`)}>
+                            View
+                          </Button>
+                          {canManageStations && (
                             <>
-                              <Button color="info" size="sm" onClick={() => openEdit(station)}>
+                              <Button color="info" size="sm" className="ml-2" onClick={() => openEdit(station)}>
                                 Edit
                               </Button>
                               {userRole === 'admin' && (
@@ -280,8 +285,6 @@ export default function StationsPage() {
                                 </Button>
                               )}
                             </>
-                          ) : (
-                            <span className="text-muted text-sm">Read only</span>
                           )}
                         </td>
                       </tr>

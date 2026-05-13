@@ -111,4 +111,177 @@ export const workflowBlocks = [
       { name: "format", label: "Format", type: "select", defaultValue: "json", options: ["json", "text", "number"] },
     ],
   },
+
+  // ── Industrial blocks ──────────────────────────────────────────────────────
+
+  {
+    type: "sensor-read",
+    title: "Sensor Read",
+    icon: "fa-microchip",
+    category: "Industrial",
+    description: "Reads the current value of a sensor by its ID.",
+    color: "#0ea5e9",
+    inputs: [{ id: "trigger", label: "Trigger" }],
+    outputs: [
+      { id: "value", label: "Value" },
+      { id: "status", label: "Status" },
+    ],
+    properties: [
+      { name: "label", label: "Label", type: "text", defaultValue: "Read Sensor" },
+      { name: "sensorId", label: "Sensor ID", type: "text", defaultValue: "" },
+    ],
+  },
+
+  {
+    type: "threshold-check",
+    title: "Threshold Check",
+    icon: "fa-sliders",
+    category: "Industrial",
+    description: "Compares an incoming value against configured min/max thresholds.",
+    color: "#f59e0b",
+    inputs: [{ id: "value", label: "Value" }],
+    outputs: [
+      { id: "pass", label: "Pass" },
+      { id: "breach", label: "Breach" },
+    ],
+    properties: [
+      { name: "label", label: "Label", type: "text", defaultValue: "Threshold Check" },
+      { name: "minThreshold", label: "Min Threshold", type: "number", defaultValue: 0 },
+      { name: "maxThreshold", label: "Max Threshold", type: "number", defaultValue: 100 },
+      {
+        name: "mode",
+        label: "Mode",
+        type: "select",
+        defaultValue: "between",
+        options: ["between", "above_max", "below_min"],
+      },
+    ],
+  },
+
+  {
+    type: "pump-control",
+    title: "Pump Control",
+    icon: "fa-rotate",
+    category: "Industrial",
+    description: "Sends a start, stop, or toggle command to a pump device via MQTT.",
+    color: "#6366f1",
+    inputs: [{ id: "trigger", label: "Trigger" }],
+    outputs: [{ id: "sent", label: "Sent" }],
+    properties: [
+      { name: "label", label: "Label", type: "text", defaultValue: "Control Pump" },
+      { name: "deviceId", label: "Device ID", type: "text", defaultValue: "" },
+      {
+        name: "command",
+        label: "Command",
+        type: "select",
+        defaultValue: "start",
+        options: ["start", "stop", "toggle"],
+      },
+      { name: "topic", label: "MQTT Topic Override", type: "text", defaultValue: "" },
+    ],
+  },
+
+  {
+    type: "alert-trigger",
+    title: "Alert Trigger",
+    icon: "fa-triangle-exclamation",
+    category: "Industrial",
+    description: "Creates a persistent alert record in the AquaFlow alert system.",
+    color: "#ef4444",
+    inputs: [{ id: "trigger", label: "Trigger" }],
+    outputs: [{ id: "alert", label: "Alert" }],
+    properties: [
+      { name: "label", label: "Label", type: "text", defaultValue: "Trigger Alert" },
+      {
+        name: "severity",
+        label: "Severity",
+        type: "select",
+        defaultValue: "warning",
+        options: ["info", "warning", "error", "critical"],
+      },
+      {
+        name: "type",
+        label: "Alert Type",
+        type: "select",
+        defaultValue: "threshold_violation",
+        options: ["threshold_violation", "sensor_offline", "maintenance_due", "system_error", "anomaly", "critical_event"],
+      },
+      { name: "message", label: "Message", type: "textarea", defaultValue: "Workflow-triggered alert" },
+      { name: "stationId", label: "Station ID", type: "text", defaultValue: "" },
+    ],
+  },
+
+  {
+    type: "mqtt-publish",
+    title: "MQTT Publish",
+    icon: "fa-tower-broadcast",
+    category: "Industrial",
+    description: "Publishes an arbitrary JSON payload to a configured MQTT topic.",
+    color: "#8b5cf6",
+    inputs: [{ id: "payload", label: "Payload" }],
+    outputs: [{ id: "sent", label: "Sent" }],
+    properties: [
+      { name: "label", label: "Label", type: "text", defaultValue: "MQTT Publish" },
+      { name: "topic", label: "Topic", type: "text", defaultValue: "aquaflow/commands" },
+      {
+        name: "qos",
+        label: "QoS",
+        type: "select",
+        defaultValue: "0",
+        options: ["0", "1", "2"],
+      },
+      { name: "payload", label: "Static Payload (JSON)", type: "textarea", defaultValue: "{}" },
+    ],
+  },
+
+  {
+    type: "station-control",
+    title: "Station Control",
+    icon: "fa-building",
+    category: "Industrial",
+    description: "Updates the operational status of a water station.",
+    color: "#10b981",
+    inputs: [{ id: "trigger", label: "Trigger" }],
+    outputs: [{ id: "done", label: "Done" }],
+    properties: [
+      { name: "label", label: "Label", type: "text", defaultValue: "Set Station Status" },
+      { name: "stationId", label: "Station ID", type: "text", defaultValue: "" },
+      {
+        name: "status",
+        label: "New Status",
+        type: "select",
+        defaultValue: "normal",
+        options: ["normal", "warning", "critical", "offline"],
+      },
+    ],
+  },
+
+  // ── Integration blocks ─────────────────────────────────────────────────────
+
+  {
+    type: "http-request",
+    title: "HTTP Request",
+    icon: "fa-globe",
+    category: "Integration",
+    description: "Makes an external HTTP call with optional headers and body.",
+    color: "#f97316",
+    inputs: [{ id: "body", label: "Body" }],
+    outputs: [
+      { id: "response", label: "Response" },
+      { id: "error", label: "Error" },
+    ],
+    properties: [
+      { name: "label", label: "Label", type: "text", defaultValue: "HTTP Request" },
+      {
+        name: "method",
+        label: "Method",
+        type: "select",
+        defaultValue: "POST",
+        options: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+      },
+      { name: "url", label: "URL", type: "text", defaultValue: "https://" },
+      { name: "headers", label: "Headers (JSON)", type: "textarea", defaultValue: "{}" },
+      { name: "body", label: "Static Body (JSON)", type: "textarea", defaultValue: "{}" },
+    ],
+  },
 ];
