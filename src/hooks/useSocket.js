@@ -17,6 +17,10 @@ import { selectAccessToken, selectUser } from '../store/slices/authSlice';
 import { sensorRealtimeUpdated } from '../store/slices/sensorsSlice';
 import { alertRealtimeReceived } from '../store/slices/alertsSlice';
 import { stationRealtimeUpdated } from '../store/slices/stationsSlice';
+import {
+  notificationReceived,
+  allNotificationsCleared,
+} from '../store/slices/notificationsSlice';
 
 const SOCKET_URL = process.env.REACT_APP_WS_URL || 'http://localhost:3001';
 
@@ -68,6 +72,14 @@ export default function useSocket(enabled = true) {
       dispatch(stationStatusReceived(data));
       dispatch(updateStationStatus(data));
       dispatch(stationRealtimeUpdated(data));
+    });
+
+    socket.on('notification-created', (data) => {
+      dispatch(notificationReceived(data));
+    });
+
+    socket.on('notifications-read-all', () => {
+      dispatch(allNotificationsCleared());
     });
 
     return () => {

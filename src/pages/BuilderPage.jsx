@@ -1,3 +1,9 @@
+// reactstrap components
+import { Card, Container, Row } from "reactstrap";
+
+// core components
+import Header from "components/Headers/Header.js";
+
 import BlockSidebar from "components/Blocksidebar/BlockSidebar";
 import FlowCanvas from "components/canvas/FlowCanvas";
 import NodeEditorModal from "components/properties/NodeEditorModal";
@@ -22,16 +28,32 @@ export default function BuilderPage() {
   };
 
   return (
-    <main className="workflow-builder">
-      <BlockSidebar />
-      <FlowCanvas editor={editor} onSave={handleSave} />
-      <PropertiesPanel editor={editor} />
-      <NodeEditorModal
-        node={editor.editingNode}
-        onClose={() => editor.setEditingNode(null)}
-        onSave={editor.updateSelectedNode}
-      />
-      {editor.editorMessage && <div className="workflow-toast">{editor.editorMessage}</div>}
-    </main>
+    <>
+      <Header />
+      {/* Page content */}
+      <Container className="mt--7" fluid>
+        <Row>
+          <div className="col">
+            <Card className="shadow border-0">
+
+              <main className="workflow-builder">
+                <BlockSidebar />
+                <FlowCanvas editor={editor} onSave={handleSave} />
+                <PropertiesPanel editor={editor} />
+                <NodeEditorModal
+                  node={editor.editingNode}
+                  onClose={() => editor.setEditingNode(null)}
+                  onSave={editor.updateSelectedNode}
+                />
+                {editor.editorMessage && (
+                  <div className="workflow-toast">{editor.editorMessage}</div>
+                )}
+              </main>
+
+            </Card>
+          </div>
+        </Row>
+      </Container>
+    </>
   );
 }

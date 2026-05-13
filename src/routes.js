@@ -5,6 +5,7 @@ import StationsPage from "modules/stations/pages/StationsPage";
 import MonitoringPage from "modules/monitoring/pages/MonitoringPage";
 import AlertsPage from "modules/alerts/pages/AlertsPage";
 import MaintenancePage from "modules/maintenance/pages/MaintenancePage";
+import AnalyticsPage from "modules/analytics/pages/AnalyticsPage";
 import Login from "modules/auth/pages/Login";
 import Register from "modules/auth/pages/Register";
 import BuilderPage from "views/builder/BuilderPage";
@@ -51,6 +52,13 @@ var routes = [
     name: "Maintenance",
     icon: "ni ni-settings text-warning",
     component: <MaintenancePage />,
+    layout: "/admin",
+  },
+  {
+    path: "/analytics",
+    name: "Analytics",
+    icon: "ni ni-chart-pie-35 text-primary",
+    component: <AnalyticsPage />,
     layout: "/admin",
   },
   {

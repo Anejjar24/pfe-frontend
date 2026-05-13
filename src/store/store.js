@@ -7,6 +7,7 @@ import sensorsReducer from './slices/sensorsSlice';
 import alertsReducer from './slices/alertsSlice';
 import maintenanceReducer from './slices/maintenanceSlice';
 import uiReducer from './slices/uiSlice';
+import notificationsReducer from './slices/notificationsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     alerts: alertsReducer,
     maintenance: maintenanceReducer,
     ui: uiReducer,
+    notifications: notificationsReducer,
   },
 });
 
