@@ -260,8 +260,8 @@ export default function StationDetailsPage() {
                         <td className="font-weight-bold">{sensor.name}</td>
                         <td className="text-capitalize">{sensor.type}</td>
                         <td>
-                          {sensor.currentValue != null
-                            ? `${Number(sensor.currentValue).toFixed(2)} ${sensor.unit || ''}`
+                          {sensor.lastReading != null
+                            ? `${Number(sensor.lastReading).toFixed(2)} ${sensor.unit || ''}`
                             : '—'}
                         </td>
                         <td>
@@ -270,8 +270,8 @@ export default function StationDetailsPage() {
                           </Badge>
                         </td>
                         <td className="text-sm text-muted">
-                          {sensor.lastUpdated
-                            ? new Date(sensor.lastUpdated).toLocaleString()
+                          {sensor.lastReadingAt
+                            ? new Date(sensor.lastReadingAt).toLocaleString()
                             : '—'}
                         </td>
                       </tr>

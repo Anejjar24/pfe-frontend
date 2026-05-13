@@ -147,19 +147,19 @@ export default function AnalyticsPage() {
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState(null);
 
-  // Load overview + sensor list on mount
+  // Load overview + sensor list on mount — kept independent so a sensor
+  // fetch failure cannot blank out the overview KPI cards.
   useEffect(() => {
     setOverviewLoading(true);
-    Promise.all([
-      analyticsService.getOverview(),
-      sensorService.getSensors({ limit: 200 }),
-    ])
-      .then(([ov, sens]) => {
-        setOverview(ov);
-        setSensors(sens.data || sens || []);
-      })
+    analyticsService.getOverview()
+      .then(setOverview)
       .catch((err) => setOverviewError(err.response?.data?.message || 'Failed to load overview'))
       .finally(() => setOverviewLoading(false));
+
+    // Backend enforces @Max(100) on the sensors endpoint
+    sensorService.getSensors({ limit: 100 })
+      .then((res) => setSensors(res.data || res || []))
+      .catch(() => setSensors([]));
   }, []);
 
   // Fetch sensor stats whenever sensor or range changes
