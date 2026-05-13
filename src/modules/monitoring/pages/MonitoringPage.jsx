@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   Badge,
   Button,
@@ -23,10 +24,13 @@ import useSocket from '../../../hooks/useSocket';
 import { selectUserRole } from '../../../store/slices/authSlice';
 import {
   createSensor,
+  deleteSensor,
   fetchSensors,
   selectSensors,
   selectSensorsError,
   selectSensorsLoading,
+  selectSensorsSaving,
+  updateSensor,
 } from '../../../store/slices/sensorsSlice';
 import { fetchStations, selectStations } from '../../../store/slices/stationsSlice';
 
@@ -56,11 +60,18 @@ export default function MonitoringPage() {
   const sensors = useSelector(selectSensors);
   const stations = useSelector(selectStations);
   const isLoading = useSelector(selectSensorsLoading);
+  const isSaving = useSelector(selectSensorsSaving);
   const error = useSelector(selectSensorsError);
   const userRole = useSelector(selectUserRole);
   const canManageSensors = ['admin', 'operator'].includes(userRole);
+  const canDelete = userRole === 'admin';
+  const navigate = useNavigate();
+
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingSensor, setEditingSensor] = useState(null);
   const [form, setForm] = useState(initialForm);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   useSocket(true);
 
   useEffect(() => {
@@ -69,9 +80,25 @@ export default function MonitoringPage() {
   }, [dispatch]);
 
   const openCreate = () => {
+    setEditingSensor(null);
+    setForm({ ...initialForm, stationId: stations[0]?.id || '' });
+    setModalOpen(true);
+  };
+
+  const openEdit = (sensor) => {
+    setEditingSensor(sensor);
     setForm({
-      ...initialForm,
-      stationId: stations[0]?.id || '',
+      name: sensor.name || '',
+      type: sensor.type || 'pressure',
+      unit: sensor.unit || '',
+      stationId: sensor.station?.id || '',
+      location: sensor.location || '',
+      minThreshold: sensor.minThreshold ?? '',
+      maxThreshold: sensor.maxThreshold ?? '',
+      status: sensor.status || 'active',
+      alertEnabled: sensor.alertEnabled ?? true,
+      deviceId: sensor.deviceId || '',
+      serialNumber: sensor.serialNumber || '',
     });
     setModalOpen(true);
   };
@@ -92,9 +119,17 @@ export default function MonitoringPage() {
       maxThreshold: form.maxThreshold === '' ? undefined : Number(form.maxThreshold),
     };
 
-    await dispatch(createSensor(payload));
-    await dispatch(fetchSensors());
+    if (editingSensor) {
+      await dispatch(updateSensor({ id: editingSensor.id, payload }));
+    } else {
+      await dispatch(createSensor(payload));
+    }
     setModalOpen(false);
+  };
+
+  const confirmDelete = () => {
+    dispatch(deleteSensor(deleteTarget.id));
+    setDeleteTarget(null);
   };
 
   return (
@@ -135,11 +170,12 @@ export default function MonitoringPage() {
                 <th>Status</th>
                 <th>Last Reading</th>
                 <th>Thresholds</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan="6" className="text-center py-5"><Spinner color="primary" /></td></tr>
+                <tr><td colSpan="7" className="text-center py-5"><Spinner color="primary" /></td></tr>
               ) : sensors.length ? (
                 sensors.map((sensor) => (
                   <tr key={sensor.id}>
@@ -150,23 +186,71 @@ export default function MonitoringPage() {
                     <td>
                       {sensor.lastReading === null || sensor.lastReading === undefined
                         ? '-'
-                        : Number(sensor.lastReading).toLocaleString(undefined, { maximumFractionDigits: 2 })}{' '}
-                      {sensor.lastReading === null || sensor.lastReading === undefined ? '' : sensor.unit}
+                        : `${Number(sensor.lastReading).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${sensor.unit}`}
                     </td>
                     <td>{sensor.minThreshold ?? '-'} / {sensor.maxThreshold ?? '-'}</td>
+                    <td className="text-right">
+                      <Button
+                        size="sm"
+                        color="default"
+                        onClick={() => navigate(`/admin/monitoring/${sensor.id}`)}
+                      >
+                        <i className="ni ni-chart-bar-32 mr-1" />
+                        View
+                      </Button>
+                      {canManageSensors && (
+                        <>
+                          <Button size="sm" color="info" className="ml-2" onClick={() => openEdit(sensor)}>
+                            Edit
+                          </Button>
+                          {canDelete && (
+                            <Button size="sm" color="danger" className="ml-2" onClick={() => setDeleteTarget(sensor)}>
+                              Delete
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="6" className="text-center text-muted py-5">No sensors found.</td></tr>
+                <tr><td colSpan="7" className="text-center text-muted py-5">No sensors found.</td></tr>
               )}
             </tbody>
           </Table>
         </Card>
       </Container>
 
+      {/* Delete confirmation modal */}
+      <Modal isOpen={!!deleteTarget} toggle={() => setDeleteTarget(null)}>
+        <ModalHeader toggle={() => setDeleteTarget(null)}>
+          <span className="text-danger">
+            <i className="ni ni-fat-remove mr-2" />
+            Delete Sensor
+          </span>
+        </ModalHeader>
+        <ModalBody>
+          <p className="mb-1">Are you sure you want to delete this sensor?</p>
+          <p className="font-weight-bold mb-0">{deleteTarget?.name}</p>
+          {deleteTarget?.station && (
+            <p className="text-muted text-sm mb-0">Station: {deleteTarget.station.name}</p>
+          )}
+          <p className="text-danger text-sm mt-3 mb-0">This action cannot be undone.</p>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button color="danger" onClick={confirmDelete} disabled={isSaving}>
+            {isSaving ? 'Deleting...' : 'Delete'}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Create / Edit modal */}
       <Modal isOpen={modalOpen} toggle={() => setModalOpen(false)} size="lg">
         <Form onSubmit={handleSubmit}>
-          <ModalHeader toggle={() => setModalOpen(false)}>Create Sensor</ModalHeader>
+          <ModalHeader toggle={() => setModalOpen(false)}>
+            {editingSensor ? 'Edit Sensor' : 'Create Sensor'}
+          </ModalHeader>
           <ModalBody>
             <Row>
               <Col md="6">
@@ -266,8 +350,8 @@ export default function MonitoringPage() {
             <Button color="secondary" type="button" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
-            <Button color="primary" type="submit">
-              Save Sensor
+            <Button color="primary" type="submit" disabled={isSaving}>
+              {isSaving ? 'Saving...' : editingSensor ? 'Update Sensor' : 'Create Sensor'}
             </Button>
           </ModalFooter>
         </Form>

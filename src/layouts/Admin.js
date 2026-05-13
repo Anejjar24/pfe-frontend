@@ -5,6 +5,7 @@ import AdminNavbar from "components/Navbars/AdminNavbar.js";
 import AdminFooter from "components/Footers/AdminFooter.js";
 import Sidebar from "components/Sidebar/Sidebar.js";
 import routes from "routes.js";
+import SensorDetailsPage from "modules/monitoring/pages/SensorDetailsPage";
 
 const Admin = (props) => {
   const mainContent = React.useRef(null);
@@ -54,6 +55,7 @@ const Admin = (props) => {
         />
         <Routes>
           {getRoutes(routes)}
+          <Route path="/monitoring/:sensorId" element={<SensorDetailsPage />} />
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Routes>
         <Container fluid>

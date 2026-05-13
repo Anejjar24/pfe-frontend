@@ -1,8 +1,10 @@
 /*eslint-disable*/
 import { useState, useEffect, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { NavLink as NavLinkRRD, Link } from "react-router-dom";
 import { PropTypes } from "prop-types";
 import useLogout from "hooks/useLogout";
+import { selectSidebarMini, toggleSidebarMini } from "store/slices/uiSlice";
 import {
   Collapse,
   DropdownMenu,
@@ -31,8 +33,9 @@ const MD_BREAKPOINT = 768;
 
 const Sidebar = (props) => {
   const logout = useLogout();
+  const dispatch = useDispatch();
+  const mini = useSelector(selectSidebarMini);
   const [collapseOpen, setCollapseOpen] = useState(false);
-  const [mini, setMini]                 = useState(false);
   const [isDesktop, setIsDesktop]       = useState(
     typeof window !== "undefined" && window.innerWidth >= MD_BREAKPOINT
   );
@@ -248,7 +251,7 @@ const Sidebar = (props) => {
             <NavItem>
               <NavLink
                 href="#"
-                onClick={(e) => { e.preventDefault(); setMini((v) => !v); }}
+                onClick={(e) => { e.preventDefault(); dispatch(toggleSidebarMini()); }}
                 title={mini ? "Expand sidebar" : "Collapse sidebar"}
                 style={{ ...linkStyle(mini), cursor: "pointer" }}
               >
