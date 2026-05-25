@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, CardBody, Col, Container, Row } from 'reactstrap';
+import { Col, Container, Row } from 'reactstrap';
 import useSocket from '../../../hooks/useSocket';
 import { fetchAlerts, selectAlerts } from '../../../store/slices/alertsSlice';
 import { selectRealtime } from '../../../store/slices/realtimeSlice';
@@ -10,6 +10,7 @@ import KPISection from '../components/KPISection';
 import AlertsFeed from '../components/AlertsFeed';
 import StationOverview from '../components/StationOverview';
 import RealtimeStats from '../components/RealtimeStats';
+import TrendCharts from '../components/TrendCharts';
 
 export default function DashboardPage() {
   const dispatch = useDispatch();
@@ -137,14 +138,7 @@ export default function DashboardPage() {
             <RealtimeStats realtime={realtime} />
           </Col>
           <Col xl="8">
-            <Card className="shadow">
-              <CardBody>
-                <h3>Operational Focus</h3>
-                <p className="text-muted mb-0">
-                  Live monitoring is connected to the Redux dashboard state, with the existing workflow builder kept intact under Automation Builder.
-                </p>
-              </CardBody>
-            </Card>
+            <TrendCharts stations={stations} />
           </Col>
         </Row>
       </Container>
