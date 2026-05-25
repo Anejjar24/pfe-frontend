@@ -8,6 +8,7 @@ import alertsReducer from './slices/alertsSlice';
 import maintenanceReducer from './slices/maintenanceSlice';
 import uiReducer from './slices/uiSlice';
 import notificationsReducer from './slices/notificationsSlice';
+import usersReducer from './slices/usersSlice';
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     maintenance: maintenanceReducer,
     ui: uiReducer,
     notifications: notificationsReducer,
+    users: usersReducer,
   },
 });
 

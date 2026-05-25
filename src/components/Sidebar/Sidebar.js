@@ -5,6 +5,7 @@ import { NavLink as NavLinkRRD, Link } from "react-router-dom";
 import { PropTypes } from "prop-types";
 import useLogout from "hooks/useLogout";
 import { selectSidebarMini, toggleSidebarMini } from "store/slices/uiSlice";
+import { selectUserRole } from "store/slices/authSlice";
 import {
   Collapse,
   DropdownMenu,
@@ -35,6 +36,7 @@ const Sidebar = (props) => {
   const logout = useLogout();
   const dispatch = useDispatch();
   const mini = useSelector(selectSidebarMini);
+  const userRole = useSelector(selectUserRole);
   const [collapseOpen, setCollapseOpen] = useState(false);
   const [isDesktop, setIsDesktop]       = useState(
     typeof window !== "undefined" && window.innerWidth >= MD_BREAKPOINT
@@ -79,6 +81,7 @@ const Sidebar = (props) => {
   const createLinks = (routes) =>
   routes
     .filter((prop) => prop.layout === "/admin")
+    .filter((prop) => !prop.adminOnly || userRole === 'admin')
     .map((prop, key) => (
       <NavItem key={key}>
         <NavLink

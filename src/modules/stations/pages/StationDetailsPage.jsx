@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Line } from 'react-chartjs-2';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -9,12 +10,14 @@ import {
   CardHeader,
   Col,
   Container,
+  Input,
   Row,
   Spinner,
   Table,
 } from 'reactstrap';
-import { stationService } from '../../../services/stationService';
+import { analyticsService } from '../../../services/analyticsService';
 import { alertService } from '../../../services/alertService';
+import { stationService } from '../../../services/stationService';
 
 const STATUS_COLORS = {
   normal: 'success',
@@ -35,14 +38,60 @@ const ALERT_STATUS_COLORS = {
   resolved: 'success',
 };
 
+const SENSOR_LINE_COLORS = [
+  '#5e72e4', '#2dce89', '#fb6340', '#11cdef', '#f5365c', '#ffd600',
+];
+
+const GRANULARITY_PRESETS = [
+  { label: '24 h', hours: 24, granularity: 'hour' },
+  { label: '7 d', hours: 168, granularity: 'hour' },
+  { label: '30 d', hours: 720, granularity: 'day' },
+];
+
+function buildHistoryChart(history, selectedSensorId) {
+  if (!history?.sensors?.length) return null;
+
+  const sensors = selectedSensorId
+    ? history.sensors.filter((s) => s.sensorId === selectedSensorId)
+    : history.sensors.slice(0, 3);
+
+  if (!sensors.length || !sensors[0].buckets?.length) return null;
+
+  const labels = sensors[0].buckets.map((b) => {
+    const d = new Date(b.time);
+    return d.toLocaleString(undefined, {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+  });
+
+  const datasets = sensors.map((s, i) => ({
+    label: `${s.sensorName} avg (${s.unit})`,
+    data: s.buckets.map((b) => b.avg),
+    borderColor: SENSOR_LINE_COLORS[i % SENSOR_LINE_COLORS.length],
+    backgroundColor: 'transparent',
+    fill: false,
+    pointRadius: s.buckets.length > 72 ? 0 : 3,
+    borderWidth: 2,
+  }));
+
+  return { labels, datasets };
+}
+
 export default function StationDetailsPage() {
   const { stationId } = useParams();
   const navigate = useNavigate();
 
   const [station, setStation] = useState(null);
   const [alerts, setAlerts] = useState([]);
+  const [history, setHistory] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [granularityIdx, setGranularityIdx] = useState(0);
+  const [selectedSensorId, setSelectedSensorId] = useState('');
+
+  const preset = GRANULARITY_PRESETS[granularityIdx];
 
   useEffect(() => {
     let cancelled = false;
@@ -69,6 +118,28 @@ export default function StationDetailsPage() {
     return () => { cancelled = true; };
   }, [stationId]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setHistoryLoading(true);
+
+    const from = new Date(Date.now() - preset.hours * 3600 * 1000).toISOString();
+    analyticsService
+      .getStationHistory(stationId, { from, granularity: preset.granularity })
+      .then((data) => {
+        if (cancelled) return;
+        setHistory(data);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setHistory(null);
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [stationId, granularityIdx]);
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
@@ -92,6 +163,7 @@ export default function StationDetailsPage() {
 
   const sensors = station.sensors || [];
   const activeAlerts = alerts.filter((a) => a.status === 'active').length;
+  const chartData = buildHistoryChart(history, selectedSensorId);
 
   return (
     <>
@@ -179,7 +251,6 @@ export default function StationDetailsPage() {
       </div>
 
       <Container className="mt--7" fluid>
-        {/* Back button + title */}
         <Row className="mb-3">
           <Col>
             <Button color="secondary" size="sm" onClick={() => navigate('/admin/stations')}>
@@ -279,6 +350,82 @@ export default function StationDetailsPage() {
                   </tbody>
                 </Table>
               )}
+            </Card>
+          </Col>
+        </Row>
+
+        {/* History Chart */}
+        <Row>
+          <Col className="mb-4">
+            <Card className="shadow">
+              <CardHeader className="border-0">
+                <Row className="align-items-center">
+                  <Col>
+                    <h3 className="mb-0">Sensor History</h3>
+                  </Col>
+                  <Col xs="auto">
+                    <div className="d-flex align-items-center" style={{ gap: 8 }}>
+                      {sensors.length > 0 && (
+                        <Input
+                          type="select"
+                          bsSize="sm"
+                          style={{ width: 160 }}
+                          value={selectedSensorId}
+                          onChange={(e) => setSelectedSensorId(e.target.value)}
+                        >
+                          <option value="">All sensors</option>
+                          {sensors.map((s) => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </Input>
+                      )}
+                      <div className="btn-group btn-group-sm" role="group">
+                        {GRANULARITY_PRESETS.map((p, i) => (
+                          <Button
+                            key={p.label}
+                            color={granularityIdx === i ? 'primary' : 'secondary'}
+                            size="sm"
+                            onClick={() => setGranularityIdx(i)}
+                          >
+                            {p.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody>
+                {historyLoading ? (
+                  <div className="text-center py-5"><Spinner color="primary" /></div>
+                ) : chartData ? (
+                  <div style={{ height: 280 }}>
+                    <Line
+                      data={chartData}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        legend: { display: true, position: 'top' },
+                        scales: {
+                          xAxes: [{
+                            ticks: {
+                              maxTicksLimit: 8,
+                              maxRotation: 0,
+                              fontSize: 11,
+                            },
+                          }],
+                          yAxes: [{ ticks: { fontSize: 11 } }],
+                        },
+                        tooltips: { mode: 'index', intersect: false },
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <p className="text-muted text-center py-4 mb-0">
+                    No sensor data available for the selected period.
+                  </p>
+                )}
+              </CardBody>
             </Card>
           </Col>
         </Row>

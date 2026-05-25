@@ -31,6 +31,7 @@ import {
   updateMaintenance,
 } from '../../../store/slices/maintenanceSlice';
 import { fetchStations, selectStations } from '../../../store/slices/stationsSlice';
+import { userService } from '../../../services/userService';
 
 const PRIORITY_COLORS = {
   low: 'success',
@@ -53,6 +54,7 @@ const initialForm = {
   priority: 'medium',
   status: 'scheduled',
   stationId: '',
+  assignedToId: '',
   description: '',
   scheduledDate: '',
 };
@@ -70,15 +72,28 @@ export default function MaintenancePage() {
   const canEdit = ['admin', 'operator', 'technician'].includes(userRole);
   const canDelete = userRole === 'admin';
 
+  const [statusFilter, setStatusFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [form, setForm] = useState(initialForm);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [technicians, setTechnicians] = useState([]);
 
   useEffect(() => {
-    dispatch(fetchMaintenance());
     dispatch(fetchStations());
+    // Fetch all active users so the form can show a technician dropdown.
+    // We fetch all roles so admins can also be assigned; filter by technician
+    // is done in the dropdown label rather than restricting the API call.
+    userService.getUsersDropdown('technician').then(setTechnicians).catch(() => setTechnicians([]));
   }, [dispatch]);
+
+  useEffect(() => {
+    const params = {};
+    if (statusFilter) params.status = statusFilter;
+    if (priorityFilter) params.priority = priorityFilter;
+    dispatch(fetchMaintenance(params));
+  }, [dispatch, statusFilter, priorityFilter]);
 
   const openCreate = () => {
     setEditingItem(null);
@@ -94,6 +109,7 @@ export default function MaintenancePage() {
       priority: item.priority || 'medium',
       status: item.status || 'scheduled',
       stationId: item.station?.id || '',
+      assignedToId: item.assignedTo?.id || '',
       description: item.description || '',
       scheduledDate: item.scheduledDate ? item.scheduledDate.slice(0, 10) : '',
     });
@@ -110,6 +126,8 @@ export default function MaintenancePage() {
     const payload = {
       ...form,
       scheduledDate: form.scheduledDate || undefined,
+      // Send undefined (omit key) when unassigned so @IsUUID() validator doesn't reject empty string
+      assignedToId: form.assignedToId || undefined,
     };
 
     if (editingItem) {
@@ -153,8 +171,55 @@ export default function MaintenancePage() {
       <Container className="mt--7" fluid>
         <Card className="shadow">
           <CardHeader className="border-0">
-            <h3 className="mb-0">Maintenance Work Orders</h3>
-            {error && <p className="text-danger text-sm mb-0 mt-1">{error}</p>}
+            <Row className="align-items-center mb-2">
+              <Col>
+                <h3 className="mb-0">Maintenance Work Orders</h3>
+              </Col>
+            </Row>
+            <Row className="align-items-center gx-2">
+              <Col xs="12" md="3">
+                <Input
+                  type="select"
+                  bsSize="sm"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="on_hold">On Hold</option>
+                </Input>
+              </Col>
+              <Col xs="12" md="3">
+                <Input
+                  type="select"
+                  bsSize="sm"
+                  value={priorityFilter}
+                  onChange={(e) => setPriorityFilter(e.target.value)}
+                >
+                  <option value="">All Priorities</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </Input>
+              </Col>
+              {(statusFilter || priorityFilter) && (
+                <Col xs="auto">
+                  <Button
+                    size="sm"
+                    color="link"
+                    className="p-0 text-muted"
+                    onClick={() => { setStatusFilter(''); setPriorityFilter(''); }}
+                  >
+                    Clear filters
+                  </Button>
+                </Col>
+              )}
+            </Row>
+            {error && <p className="text-danger text-sm mb-0 mt-2">{error}</p>}
           </CardHeader>
           <Table className="align-items-center table-flush" responsive>
             <thead className="thead-light">
@@ -164,6 +229,7 @@ export default function MaintenancePage() {
                 <th>Type</th>
                 <th>Priority</th>
                 <th>Status</th>
+                <th>Assigned To</th>
                 <th>Scheduled</th>
                 <th className="text-right">Actions</th>
               </tr>
@@ -171,7 +237,7 @@ export default function MaintenancePage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-5">
+                  <td colSpan="8" className="text-center py-5">
                     <Spinner color="warning" />
                   </td>
                 </tr>
@@ -190,6 +256,11 @@ export default function MaintenancePage() {
                       <Badge color={STATUS_COLORS[item.status] || 'secondary'}>
                         {item.status?.replace('_', ' ')}
                       </Badge>
+                    </td>
+                    <td>
+                      {item.assignedTo
+                        ? `${item.assignedTo.firstname} ${item.assignedTo.lastname}`
+                        : <span className="text-muted">—</span>}
                     </td>
                     <td>
                       {item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString() : '-'}
@@ -213,7 +284,7 @@ export default function MaintenancePage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center text-muted py-5">
+                  <td colSpan="8" className="text-center text-muted py-5">
                     No maintenance records found.
                   </td>
                 </tr>
@@ -325,15 +396,40 @@ export default function MaintenancePage() {
                 </FormGroup>
               </Col>
             </Row>
-            <FormGroup>
-              <Label>Scheduled Date</Label>
-              <Input
-                type="date"
-                name="scheduledDate"
-                value={form.scheduledDate}
-                onChange={handleInputChange}
-              />
-            </FormGroup>
+            <Row>
+              <Col md="6">
+                <FormGroup>
+                  <Label>Assigned To</Label>
+                  <Input
+                    type="select"
+                    name="assignedToId"
+                    value={form.assignedToId}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">— Unassigned —</option>
+                    {technicians.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.firstname} {u.lastname}
+                      </option>
+                    ))}
+                  </Input>
+                  {technicians.length === 0 && (
+                    <small className="text-muted">Loading users…</small>
+                  )}
+                </FormGroup>
+              </Col>
+              <Col md="6">
+                <FormGroup>
+                  <Label>Scheduled Date</Label>
+                  <Input
+                    type="date"
+                    name="scheduledDate"
+                    value={form.scheduledDate}
+                    onChange={handleInputChange}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
             <FormGroup>
               <Label>Description</Label>
               <Input

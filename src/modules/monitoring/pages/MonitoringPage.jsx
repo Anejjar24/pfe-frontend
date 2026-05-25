@@ -67,6 +67,8 @@ export default function MonitoringPage() {
   const canDelete = userRole === 'admin';
   const navigate = useNavigate();
 
+  const [stationFilter, setStationFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSensor, setEditingSensor] = useState(null);
   const [form, setForm] = useState(initialForm);
@@ -75,9 +77,15 @@ export default function MonitoringPage() {
   useSocket(true);
 
   useEffect(() => {
-    dispatch(fetchSensors());
     dispatch(fetchStations());
   }, [dispatch]);
+
+  useEffect(() => {
+    const params = {};
+    if (stationFilter) params.stationId = stationFilter;
+    if (typeFilter) params.type = typeFilter;
+    dispatch(fetchSensors(params));
+  }, [dispatch, stationFilter, typeFilter]);
 
   const openCreate = () => {
     setEditingSensor(null);
@@ -155,11 +163,60 @@ export default function MonitoringPage() {
       <Container className="mt--7" fluid>
         <Card className="shadow">
           <CardHeader className="border-0">
-            <h3 className="mb-0">Sensors</h3>
+            <Row className="align-items-center mb-2">
+              <Col>
+                <h3 className="mb-0">Sensors</h3>
+              </Col>
+            </Row>
+            <Row className="align-items-center gx-2">
+              <Col xs="12" md="4">
+                <Input
+                  type="select"
+                  bsSize="sm"
+                  value={stationFilter}
+                  onChange={(e) => setStationFilter(e.target.value)}
+                >
+                  <option value="">All Stations</option>
+                  {stations.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </Input>
+              </Col>
+              <Col xs="12" md="3">
+                <Input
+                  type="select"
+                  bsSize="sm"
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                >
+                  <option value="">All Types</option>
+                  <option value="pressure">Pressure</option>
+                  <option value="flow">Flow</option>
+                  <option value="temperature">Temperature</option>
+                  <option value="quality">Quality</option>
+                  <option value="level">Level</option>
+                  <option value="ph">pH</option>
+                  <option value="turbidity">Turbidity</option>
+                  <option value="chlorine">Chlorine</option>
+                </Input>
+              </Col>
+              {(stationFilter || typeFilter) && (
+                <Col xs="auto">
+                  <Button
+                    size="sm"
+                    color="link"
+                    className="p-0 text-muted"
+                    onClick={() => { setStationFilter(''); setTypeFilter(''); }}
+                  >
+                    Clear filters
+                  </Button>
+                </Col>
+              )}
+            </Row>
             {!stations.length && (
-              <p className="text-warning text-sm mb-0">Create a station first before adding sensors.</p>
+              <p className="text-warning text-sm mb-0 mt-2">Create a station first before adding sensors.</p>
             )}
-            {error && <p className="text-danger text-sm mb-0">{error}</p>}
+            {error && <p className="text-danger text-sm mb-0 mt-2">{error}</p>}
           </CardHeader>
           <Table className="align-items-center table-flush" responsive>
             <thead className="thead-light">

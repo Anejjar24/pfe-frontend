@@ -6,6 +6,8 @@ import MonitoringPage from "modules/monitoring/pages/MonitoringPage";
 import AlertsPage from "modules/alerts/pages/AlertsPage";
 import MaintenancePage from "modules/maintenance/pages/MaintenancePage";
 import AnalyticsPage from "modules/analytics/pages/AnalyticsPage";
+import NotificationsPage from "modules/notifications/pages/NotificationsPage";
+import UsersPage from "modules/users/pages/UsersPage";
 import Login from "modules/auth/pages/Login";
 import Register from "modules/auth/pages/Register";
 import BuilderPage from "views/builder/BuilderPage";
@@ -82,6 +84,21 @@ var routes = [
   //   component: <Maps />,
   //   layout: "/admin",
   // },
+  {
+    path: "/notifications",
+    name: "Notifications",
+    icon: "ni ni-bell-55 text-info",
+    component: <NotificationsPage />,
+    layout: "/admin",
+  },
+  {
+    path: "/users",
+    name: "User Management",
+    icon: "ni ni-single-02 text-dark",
+    component: <UsersPage />,
+    layout: "/admin",
+    adminOnly: true,
+  },
   {
     path: "/user-profile",
     name: "User Profile",
