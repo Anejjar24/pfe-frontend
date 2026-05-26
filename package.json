@@ -52,6 +52,8 @@
     "chart.js": "2.9.4",
     "classnames": "2.3.2",
     "jointjs": "^3.7.7",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1",
     "moment": "2.29.4",
     "nouislider": "15.4.0",
     "react": "18.2.0",

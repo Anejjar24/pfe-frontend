@@ -18,6 +18,7 @@ import {
   Table,
 } from 'reactstrap';
 import useSocket from '../../../hooks/useSocket';
+import alertService from '../../../services/alertService';
 import { selectUserRole } from '../../../store/slices/authSlice';
 import {
   acknowledgeAlert,
@@ -63,6 +64,7 @@ export default function AlertsPage() {
   const [severityFilter, setSeverityFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedAlert, setSelectedAlert] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   useSocket(true);
 
@@ -72,6 +74,28 @@ export default function AlertsPage() {
     if (statusFilter) params.status = statusFilter;
     dispatch(fetchAlerts(params));
   }, [dispatch, severityFilter, statusFilter]);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const params = {};
+      if (severityFilter) params.severity = severityFilter;
+      if (statusFilter) params.status = statusFilter;
+      const blob = await alertService.exportCsv(params);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'alerts.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleAcknowledge = (alert) => {
     dispatch(acknowledgeAlert(alert.id));
@@ -146,6 +170,17 @@ export default function AlertsPage() {
                       </Button>
                     </Col>
                   )}
+                  <Col xs="auto">
+                    <Button
+                      size="sm"
+                      color="default"
+                      disabled={isExporting}
+                      onClick={handleExport}
+                    >
+                      <i className="ni ni-cloud-download-95 mr-1" />
+                      {isExporting ? 'Exporting…' : 'Export CSV'}
+                    </Button>
+                  </Col>
                 </Row>
               </Col>
             </Row>

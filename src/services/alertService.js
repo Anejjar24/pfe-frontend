@@ -20,6 +20,14 @@ export const alertService = {
     const response = await apiClient.patch(`/alerts/${id}/resolve`);
     return response.data;
   },
+
+  async exportCsv(params = {}) {
+    const response = await apiClient.get('/alerts/export/csv', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data; // Blob
+  },
 };
 
 export default alertService;

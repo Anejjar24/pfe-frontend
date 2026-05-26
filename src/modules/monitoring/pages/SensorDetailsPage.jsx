@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Line } from 'react-chartjs-2';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -12,6 +13,8 @@ import {
   Row,
   Spinner,
 } from 'reactstrap';
+import useSocket from '../../../hooks/useSocket';
+import { selectRealtimeConnected } from '../../../store/slices/realtimeSlice';
 import sensorService from '../../../services/sensorService';
 
 const STATUS_COLORS = {
@@ -111,6 +114,48 @@ const chartOptions = {
   },
 };
 
+// ─── Live Feed helpers ────────────────────────────────────────────────────────
+
+const LIVE_BUFFER_SIZE = 50;
+
+function buildLiveChartData(liveReadings, sensor) {
+  // liveReadings is newest-first — reverse so time flows left → right
+  const ordered = [...liveReadings].reverse();
+  return {
+    labels: ordered.map((r) => {
+      const d = new Date(r.timestamp);
+      return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }),
+    datasets: [
+      {
+        label: `${sensor?.name ?? 'Sensor'} (${sensor?.unit ?? ''})`,
+        data: ordered.map((r) => Number(r.value)),
+        borderColor: '#2dce89',
+        backgroundColor: 'rgba(45,206,137,0.08)',
+        fill: true,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 2,
+      },
+    ],
+  };
+}
+
+const liveChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: { duration: 250 },
+  legend: { display: false },
+  scales: {
+    xAxes: [{ ticks: { maxTicksLimit: 8, autoSkip: true, fontSize: 10 }, gridLines: { display: false } }],
+    yAxes: [{ ticks: { fontSize: 11, padding: 8 }, gridLines: { color: 'rgba(0,0,0,0.05)', drawBorder: false } }],
+  },
+  tooltips: { mode: 'index', intersect: false },
+  elements: { line: { tension: 0.3 } },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function SensorDetailsPage() {
   const { sensorId } = useParams();
   const navigate = useNavigate();
@@ -120,6 +165,13 @@ export default function SensorDetailsPage() {
   const [limit, setLimit] = useState(100);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // ── Live feed ──────────────────────────────────────────────────────────────
+  const [liveReadings, setLiveReadings] = useState([]); // newest-first, max 50
+  const isConnected = useSelector(selectRealtimeConnected);
+  const lastSensorUpdate = useSelector((state) => state.realtime.lastSensorUpdate);
+  useSocket(true); // establish WebSocket on this page
 
   useEffect(() => {
     let cancelled = false;
@@ -148,6 +200,42 @@ export default function SensorDetailsPage() {
     load();
     return () => { cancelled = true; };
   }, [sensorId, limit]);
+
+  // Pre-seed live buffer whenever historical data loads / limit changes
+  useEffect(() => {
+    if (readings.length > 0) {
+      setLiveReadings(readings.slice(0, LIVE_BUFFER_SIZE));
+    }
+  }, [readings]);
+
+  // Append incoming WebSocket readings for this sensor
+  useEffect(() => {
+    if (!lastSensorUpdate || lastSensorUpdate.sensorId !== sensorId) return;
+    const point = {
+      value: lastSensorUpdate.value,
+      timestamp: lastSensorUpdate.timestamp ?? new Date().toISOString(),
+    };
+    setLiveReadings((prev) => [point, ...prev].slice(0, LIVE_BUFFER_SIZE));
+  }, [lastSensorUpdate, sensorId]);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const blob = await sensorService.exportSensorDataCsv(sensorId, { limit });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sensor-${sensorId}-data.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -256,6 +344,52 @@ export default function SensorDetailsPage() {
           ))}
         </Row>
 
+        {/* ── Live Feed card ───────────────────────────────────────────── */}
+        <Card className="shadow mb-4">
+          <CardHeader className="border-0">
+            <Row className="align-items-center">
+              <Col>
+                <h3 className="mb-0">
+                  Live Feed{' '}
+                  {isConnected ? (
+                    <Badge color="success" style={{ fontSize: '0.65rem', verticalAlign: 'middle' }}>
+                      ● Live
+                    </Badge>
+                  ) : (
+                    <Badge color="secondary" style={{ fontSize: '0.65rem', verticalAlign: 'middle' }}>
+                      ○ Disconnected
+                    </Badge>
+                  )}
+                </h3>
+                <p className="text-muted text-sm mb-0">
+                  Rolling buffer — last {liveReadings.length} reading{liveReadings.length !== 1 ? 's' : ''}
+                </p>
+              </Col>
+              {liveReadings.length > 0 && sensor && (
+                <Col xs="auto">
+                  <span className="h3 font-weight-bold text-success mb-0">
+                    {Number(liveReadings[0].value).toLocaleString(undefined, { maximumFractionDigits: 2 })}{' '}
+                    <small className="text-muted font-weight-normal">{sensor.unit}</small>
+                  </span>
+                </Col>
+              )}
+            </Row>
+          </CardHeader>
+          <CardBody className="pt-0 pb-3">
+            {liveReadings.length > 0 && sensor ? (
+              <div style={{ height: 220 }}>
+                <Line data={buildLiveChartData(liveReadings, sensor)} options={liveChartOptions} />
+              </div>
+            ) : (
+              <p className="text-muted text-center py-4 mb-0">
+                {isConnected
+                  ? 'Waiting for live sensor data…'
+                  : 'Not connected — live updates paused.'}
+              </p>
+            )}
+          </CardBody>
+        </Card>
+
         {/* Chart card */}
         <Card className="shadow mb-4">
           <CardHeader className="border-0">
@@ -283,6 +417,16 @@ export default function SensorDetailsPage() {
                       {n}
                     </Button>
                   ))}
+                  <Button
+                    size="sm"
+                    color="default"
+                    className="ml-3"
+                    disabled={isExporting || readings.length === 0}
+                    onClick={handleExport}
+                  >
+                    <i className="ni ni-cloud-download-95 mr-1" />
+                    {isExporting ? 'Exporting…' : 'Export CSV'}
+                  </Button>
                 </div>
               </Col>
             </Row>

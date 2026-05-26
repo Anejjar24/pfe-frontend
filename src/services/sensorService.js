@@ -30,6 +30,14 @@ export const sensorService = {
     const response = await apiClient.get(`/sensors/${id}/data`, { params: { limit } });
     return response.data;
   },
+
+  async exportSensorDataCsv(id, params = {}) {
+    const response = await apiClient.get(`/sensors/${id}/data/export`, {
+      params,
+      responseType: 'blob',
+    });
+    return response.data; // Blob
+  },
 };
 
 export default sensorService;

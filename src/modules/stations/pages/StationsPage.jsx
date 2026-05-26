@@ -37,6 +37,7 @@ import {
   deleteStation,
 } from '../../../store/slices/stationsSlice';
 import { selectUserRole } from '../../../store/slices/authSlice';
+import StationsMap from '../components/StationsMap';
 
 const STATUS_COLORS = {
   normal: 'success',
@@ -69,6 +70,7 @@ export default function StationsPage() {
   const userRole = useSelector(selectUserRole);
   const canManageStations = ['admin', 'operator'].includes(userRole);
   useSocket(true);
+  const [view, setView] = useState('table'); // 'table' | 'map'
   const [modalOpen, setModalOpen] = useState(false);
   const [editingStation, setEditingStation] = useState(null);
   const [form, setForm] = useState(initialForm);
@@ -195,7 +197,26 @@ export default function StationsPage() {
                     <h3 className="mb-0">Stations</h3>
                     <p className="text-sm text-muted mb-0">Manage supervised water stations and operational status.</p>
                   </Col>
-                  <Col className="text-right" xs="12" md="3">
+                  <Col className="text-right" xs="12" md="auto">
+                    {/* Map / Table toggle */}
+                    <div className="btn-group btn-group-sm mr-2" role="group">
+                      <Button
+                        color={view === 'table' ? 'primary' : 'secondary'}
+                        size="sm"
+                        onClick={() => setView('table')}
+                        title="Table view"
+                      >
+                        <i className="ni ni-bullet-list-67" />
+                      </Button>
+                      <Button
+                        color={view === 'map' ? 'primary' : 'secondary'}
+                        size="sm"
+                        onClick={() => setView('map')}
+                        title="Map view"
+                      >
+                        <i className="ni ni-map-big" />
+                      </Button>
+                    </div>
                     {canManageStations && (
                       <Button color="primary" size="sm" onClick={openCreate}>
                         <i className="ni ni-fat-add mr-2" />
@@ -206,104 +227,120 @@ export default function StationsPage() {
                 </Row>
               </CardHeader>
 
-              <CardBody className="border-top">
-                <Row>
-                  <Col md="4">
-                    <Input
-                      name="search"
-                      placeholder="Search stations"
-                      value={filters.search}
-                      onChange={handleFilterChange}
-                    />
-                  </Col>
-                  <Col md="4">
-                    <Input type="select" name="status" value={filters.status} onChange={handleFilterChange}>
-                      <option value="">All statuses</option>
-                      <option value="normal">Normal</option>
-                      <option value="warning">Warning</option>
-                      <option value="critical">Critical</option>
-                      <option value="offline">Offline</option>
-                    </Input>
-                  </Col>
-                  <Col md="4">
-                    <Input type="select" name="type" value={filters.type} onChange={handleFilterChange}>
-                      <option value="">All types</option>
-                      <option value="treatment">Treatment</option>
-                      <option value="distribution">Distribution</option>
-                      <option value="storage">Storage</option>
-                      <option value="monitoring">Monitoring</option>
-                    </Input>
-                  </Col>
-                </Row>
-              </CardBody>
+              {/* ── Table view ────────────────────────────────────────── */}
+              {view === 'table' && (
+                <>
+                  <CardBody className="border-top">
+                    <Row>
+                      <Col md="4">
+                        <Input
+                          name="search"
+                          placeholder="Search stations"
+                          value={filters.search}
+                          onChange={handleFilterChange}
+                        />
+                      </Col>
+                      <Col md="4">
+                        <Input type="select" name="status" value={filters.status} onChange={handleFilterChange}>
+                          <option value="">All statuses</option>
+                          <option value="normal">Normal</option>
+                          <option value="warning">Warning</option>
+                          <option value="critical">Critical</option>
+                          <option value="offline">Offline</option>
+                        </Input>
+                      </Col>
+                      <Col md="4">
+                        <Input type="select" name="type" value={filters.type} onChange={handleFilterChange}>
+                          <option value="">All types</option>
+                          <option value="treatment">Treatment</option>
+                          <option value="distribution">Distribution</option>
+                          <option value="storage">Storage</option>
+                          <option value="monitoring">Monitoring</option>
+                        </Input>
+                      </Col>
+                    </Row>
+                  </CardBody>
 
-              {error && <Alert color="danger" className="mx-4">{error}</Alert>}
+                  {error && <Alert color="danger" className="mx-4">{error}</Alert>}
 
-              <Table className="align-items-center table-flush" responsive>
-                <thead className="thead-light">
-                  <tr>
-                    <th scope="col">Station</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Capacity</th>
-                    <th scope="col">Sensors</th>
-                    <th scope="col" className="text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan="6" className="text-center py-5">
-                        <Spinner color="primary" />
-                      </td>
-                    </tr>
-                  ) : stations.length ? (
-                    stations.map((station) => (
-                      <tr key={station.id}>
-                        <th scope="row">
-                          <div className="font-weight-bold">{station.name}</div>
-                          <span className="text-muted text-sm">{station.location}</span>
-                        </th>
-                        <td className="text-capitalize">{station.type}</td>
-                        <td>
-                          <Badge color={STATUS_COLORS[station.status] || 'secondary'}>{station.status}</Badge>
-                        </td>
-                        <td>{Number(station.capacity).toLocaleString()} {station.capacityUnit}</td>
-                        <td>{station.sensors?.length || 0}</td>
-                        <td className="text-right">
-                          <Button color="default" size="sm" onClick={() => navigate(`/admin/stations/${station.id}`)}>
-                            View
-                          </Button>
-                          {canManageStations && (
-                            <>
-                              <Button color="info" size="sm" className="ml-2" onClick={() => openEdit(station)}>
-                                Edit
-                              </Button>
-                              {userRole === 'admin' && (
-                                <Button color="danger" size="sm" className="ml-2" onClick={() => handleDelete(station)}>
-                                  Delete
-                                </Button>
-                              )}
-                            </>
-                          )}
-                        </td>
+                  <Table className="align-items-center table-flush" responsive>
+                    <thead className="thead-light">
+                      <tr>
+                        <th scope="col">Station</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Capacity</th>
+                        <th scope="col">Sensors</th>
+                        <th scope="col" className="text-right">Actions</th>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="text-center text-muted py-5">
-                        No stations found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
+                    </thead>
+                    <tbody>
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan="6" className="text-center py-5">
+                            <Spinner color="primary" />
+                          </td>
+                        </tr>
+                      ) : stations.length ? (
+                        stations.map((station) => (
+                          <tr key={station.id}>
+                            <th scope="row">
+                              <div className="font-weight-bold">{station.name}</div>
+                              <span className="text-muted text-sm">{station.location}</span>
+                            </th>
+                            <td className="text-capitalize">{station.type}</td>
+                            <td>
+                              <Badge color={STATUS_COLORS[station.status] || 'secondary'}>{station.status}</Badge>
+                            </td>
+                            <td>{Number(station.capacity).toLocaleString()} {station.capacityUnit}</td>
+                            <td>{station.sensors?.length || 0}</td>
+                            <td className="text-right">
+                              <Button color="default" size="sm" onClick={() => navigate(`/admin/stations/${station.id}`)}>
+                                View
+                              </Button>
+                              {canManageStations && (
+                                <>
+                                  <Button color="info" size="sm" className="ml-2" onClick={() => openEdit(station)}>
+                                    Edit
+                                  </Button>
+                                  {userRole === 'admin' && (
+                                    <Button color="danger" size="sm" className="ml-2" onClick={() => handleDelete(station)}>
+                                      Delete
+                                    </Button>
+                                  )}
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="6" className="text-center text-muted py-5">
+                            No stations found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
 
-              <CardBody className="border-top">
-                <span className="text-sm text-muted">
-                  Showing {stations.length} of {meta.total} stations
-                </span>
-              </CardBody>
+                  <CardBody className="border-top">
+                    <span className="text-sm text-muted">
+                      Showing {stations.length} of {meta.total} stations
+                    </span>
+                  </CardBody>
+                </>
+              )}
+
+              {/* ── Map view ──────────────────────────────────────────── */}
+              {view === 'map' && (
+                isLoading ? (
+                  <div className="text-center py-5">
+                    <Spinner color="primary" />
+                  </div>
+                ) : (
+                  <StationsMap stations={stations} />
+                )
+              )}
             </Card>
           </Col>
         </Row>
