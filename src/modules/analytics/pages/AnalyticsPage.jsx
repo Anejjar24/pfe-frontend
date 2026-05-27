@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Doughnut, Line } from 'react-chartjs-2';
 import {
   Alert,
@@ -15,8 +16,19 @@ import {
   Row,
   Spinner,
 } from 'reactstrap';
-import { analyticsService } from '../../../services/analyticsService';
-import { sensorService } from '../../../services/sensorService';
+import {
+  fetchAnalyticsOverview,
+  fetchAnalyticsSensors,
+  fetchSensorStats,
+  clearSensorStats,
+  selectAnalyticsOverview,
+  selectAnalyticsOverviewLoading,
+  selectAnalyticsOverviewError,
+  selectAnalyticsSensors,
+  selectAnalyticsSensorStats,
+  selectAnalyticsStatsLoading,
+  selectAnalyticsStatsError,
+} from '../../../store/slices/analyticsSlice';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -131,40 +143,36 @@ const lineOptions = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
-  // Overview state
-  const [overview, setOverview] = useState(null);
-  const [overviewLoading, setOverviewLoading] = useState(true);
-  const [overviewError, setOverviewError] = useState(null);
+  const dispatch = useDispatch();
 
-  // Sensor analysis state
-  const [sensors, setSensors] = useState([]);
+  // ── Redux state (fetched data) ───────────────────────────────────────────
+  const overview = useSelector(selectAnalyticsOverview);
+  const overviewLoading = useSelector(selectAnalyticsOverviewLoading);
+  const overviewError = useSelector(selectAnalyticsOverviewError);
+  const sensors = useSelector(selectAnalyticsSensors);
+  const sensorStats = useSelector(selectAnalyticsSensorStats);
+  const statsLoading = useSelector(selectAnalyticsStatsLoading);
+  const statsError = useSelector(selectAnalyticsStatsError);
+
+  // ── Local UI state (not worth caching in Redux) ──────────────────────────
   const [selectedSensorId, setSelectedSensorId] = useState('');
   const [rangePreset, setRangePreset] = useState(1); // days
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [useCustomRange, setUseCustomRange] = useState(false);
-  const [sensorStats, setSensorStats] = useState(null);
-  const [statsLoading, setStatsLoading] = useState(false);
-  const [statsError, setStatsError] = useState(null);
 
-  // Load overview + sensor list on mount — kept independent so a sensor
-  // fetch failure cannot blank out the overview KPI cards.
+  // Load overview + sensor list on mount
   useEffect(() => {
-    setOverviewLoading(true);
-    analyticsService.getOverview()
-      .then(setOverview)
-      .catch((err) => setOverviewError(err.response?.data?.message || 'Failed to load overview'))
-      .finally(() => setOverviewLoading(false));
-
-    // Backend enforces @Max(100) on the sensors endpoint
-    sensorService.getSensors({ limit: 100 })
-      .then((res) => setSensors(res.data || res || []))
-      .catch(() => setSensors([]));
-  }, []);
+    dispatch(fetchAnalyticsOverview());
+    dispatch(fetchAnalyticsSensors());
+  }, [dispatch]);
 
   // Fetch sensor stats whenever sensor or range changes
   useEffect(() => {
-    if (!selectedSensorId) return;
+    if (!selectedSensorId) {
+      dispatch(clearSensorStats());
+      return;
+    }
 
     const params = {};
     if (useCustomRange) {
@@ -175,20 +183,11 @@ export default function AnalyticsPage() {
       params.to = new Date().toISOString();
     }
 
-    setStatsLoading(true);
-    setStatsError(null);
-    analyticsService.getSensorStats(selectedSensorId, params)
-      .then(setSensorStats)
-      .catch((err) => setStatsError(err.response?.data?.message || 'Failed to load sensor stats'))
-      .finally(() => setStatsLoading(false));
-  }, [selectedSensorId, rangePreset, useCustomRange, customFrom, customTo]);
+    dispatch(fetchSensorStats({ sensorId: selectedSensorId, params }));
+  }, [dispatch, selectedSensorId, rangePreset, useCustomRange, customFrom, customTo]);
 
   const refreshOverview = () => {
-    setOverviewLoading(true);
-    analyticsService.getOverview()
-      .then(setOverview)
-      .catch((err) => setOverviewError(err.response?.data?.message || 'Failed to refresh'))
-      .finally(() => setOverviewLoading(false));
+    dispatch(fetchAnalyticsOverview());
   };
 
   const statusChartData = overview?.stationsByStatus?.length
