@@ -91,8 +91,6 @@ export default function StationDetailsPage() {
   const [granularityIdx, setGranularityIdx] = useState(0);
   const [selectedSensorId, setSelectedSensorId] = useState('');
 
-  const preset = GRANULARITY_PRESETS[granularityIdx];
-
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -119,6 +117,7 @@ export default function StationDetailsPage() {
   }, [stationId]);
 
   useEffect(() => {
+    const preset = GRANULARITY_PRESETS[granularityIdx];
     let cancelled = false;
     setHistoryLoading(true);
 
