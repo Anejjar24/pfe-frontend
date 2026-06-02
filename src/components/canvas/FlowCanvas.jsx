@@ -15,7 +15,7 @@ const starterWorkflow = {
   ],
 };
 
-export default function FlowCanvas({ editor, onLoad, onSave }) {
+export default function FlowCanvas({ editor }) {
   const editorRef = useRef(editor);
   editorRef.current = editor;
 
@@ -48,11 +48,9 @@ export default function FlowCanvas({ editor, onLoad, onSave }) {
         canRedo={editor.canRedo}
         onFit={editor.fitToScreen}
         onImport={editor.importJsonFile}
-        onLoad={onLoad}
         onRedo={editor.redo}
         onReset={editor.resetView}
         onUndo={editor.undo}
-        onSave={onSave}
         onZoomIn={() => editor.setPaperZoom(editor.zoom + 0.1)}
         onZoomOut={() => editor.setPaperZoom(editor.zoom - 0.1)}
         selectedNode={editor.selectedNode}

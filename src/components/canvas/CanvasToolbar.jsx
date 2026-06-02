@@ -11,10 +11,8 @@ export default function CanvasToolbar({
   onExport,
   onFit,
   onImport,
-  onLoad,
   onRedo,
   onReset,
-  onSave,
   onUndo,
   onZoomIn,
   onZoomOut,
@@ -26,12 +24,6 @@ export default function CanvasToolbar({
   return (
     <header className="workflow-toolbar">
       <div className="toolbar-group">
-        <button onClick={onSave} title="Save workflow" type="button">
-          <i className="fa fa-save" aria-hidden="true" />
-        </button>
-        <button onClick={onLoad} title="Load saved workflow" type="button">
-          <i className="fa fa-folder-open" aria-hidden="true" />
-        </button>
         <button onClick={onExport} title="Export JSON" type="button">
           <i className="fa fa-download" aria-hidden="true" />
         </button>

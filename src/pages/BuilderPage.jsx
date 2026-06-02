@@ -127,6 +127,24 @@ export default function BuilderPage() {
         <div className="builder-toolbar">
           <Button
             size="sm"
+            color="primary"
+            onClick={handleSave}
+            title="Save workflow to backend"
+          >
+            <i className="fa fa-save mr-1" />
+            Save
+          </Button>
+          <Button
+            size="sm"
+            color="secondary"
+            onClick={() => setPickerOpen(true)}
+            title="Load a saved workflow"
+          >
+            <i className="fa fa-folder-open mr-1" />
+            Load
+          </Button>
+          <Button
+            size="sm"
             color="secondary"
             onClick={() => setSettingsOpen(true)}
             title="Workflow trigger settings"
@@ -159,11 +177,7 @@ export default function BuilderPage() {
         {/* ── 3-panel editor area ── */}
         <main className="workflow-builder">
           <BlockSidebar />
-          <FlowCanvas
-            editor={editor}
-            onLoad={() => setPickerOpen(true)}
-            onSave={handleSave}
-          />
+          <FlowCanvas editor={editor} />
           <PropertiesPanel editor={editor} />
           <NodeEditorModal
             node={editor.editingNode}
