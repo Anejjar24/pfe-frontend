@@ -50,12 +50,13 @@ export function useWorkflowEditor() {
 
     setIsExecuting(true);
     setExecutionResult(null);
+    const startedAt = Date.now();
     try {
       const result = await executeWorkflowGraph(workflow);
-      setExecutionResult(result);
+      setExecutionResult({ ...result, startedAt, durationMs: Date.now() - startedAt });
       setEditorMessage("Execution completed");
     } catch (error) {
-      setExecutionResult({ error: error.message });
+      setExecutionResult({ error: error.message, startedAt, durationMs: Date.now() - startedAt });
       setEditorMessage("Execution failed");
     } finally {
       setIsExecuting(false);

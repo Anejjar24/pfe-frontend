@@ -9,6 +9,7 @@ import FlowCanvas from "components/canvas/FlowCanvas";
 import NodeEditorModal from "components/properties/NodeEditorModal";
 import PropertiesPanel from "components/properties/PropertiesPanel";
 import ExecutionHistoryModal from "components/workflow/ExecutionHistoryModal";
+import ExecutionResultPanel from "components/execution/ExecutionResultPanel";
 import WorkflowPickerModal from "components/workflow/WorkflowPickerModal";
 import WorkflowSettingsModal from "components/workflow/WorkflowSettingsModal";
 import {
@@ -173,6 +174,12 @@ export default function BuilderPage() {
             <div className="workflow-toast">{editor.editorMessage}</div>
           )}
         </main>
+
+        {/* ── Execution result panel (full-width, below the 3-panel grid) ── */}
+        <ExecutionResultPanel
+          result={editor.executionResult}
+          isRunning={editor.isExecuting}
+        />
       </div>
 
       {/* ── Workflow Settings Modal ── */}

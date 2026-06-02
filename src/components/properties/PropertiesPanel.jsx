@@ -43,12 +43,6 @@ export default function PropertiesPanel({ editor }) {
           </div>
         </>
       )}
-      {editor.executionResult && (
-        <div className="execution-result">
-          <h3>Execution</h3>
-          <pre>{JSON.stringify(editor.executionResult, null, 2)}</pre>
-        </div>
-      )}
     </aside>
   );
 }

@@ -417,21 +417,7 @@
   box-sizing: border-box;
 }
 
-.execution-result {
-  border-top: 1px solid #e2e8f0;
-  flex-shrink: 0;
-  padding: 16px;
-}
-
-.execution-result pre {
-  background: #0f172a;
-  border-radius: 7px;
-  color: #e2e8f0;
-  font-size: 11px;
-  max-height: 220px;
-  overflow: auto;
-  padding: 12px;
-}
+/* (execution-result styles moved to section 21 — ExecutionResultPanel) */
 
 /* ------------------------------------------------------------------
    16. NODE EDITOR MODAL
@@ -811,4 +797,278 @@
     overflow-x: auto;
     padding: 6px 10px;
   }
+}
+
+/* ------------------------------------------------------------------
+   21. EXECUTION RESULT PANEL
+   Full-width dark dashboard panel — sits below the 3-panel grid
+   inside .builder-shell.  Collapsed = status bar only (40 px).
+   Expanded = status bar + content body (up to 220 px).
+   ------------------------------------------------------------------ */
+
+/* ── Outer shell ── */
+.erp-panel {
+  background: #0f172a;          /* Slate 900 */
+  border-top: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ── Status bar (always visible, acts as the toggle trigger) ── */
+.erp-statusbar {
+  align-items: center;
+  background: #1e293b;          /* Slate 800 */
+  border: 0;
+  color: #cbd5e1;               /* Slate 300 */
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+  height: 40px;
+  padding: 0 16px;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s ease;
+}
+
+.erp-statusbar:hover {
+  background: #263348;
+}
+
+/* ── Coloured dot indicator ── */
+.erp-dot {
+  border-radius: 50%;
+  flex-shrink: 0;
+  height: 9px;
+  width: 9px;
+  transition: background 0.3s ease;
+}
+
+@keyframes erpPulse {
+  0%, 100% { opacity: 1; transform: scale(1);    }
+  50%       { opacity: 0.5; transform: scale(1.4); }
+}
+
+.erp-dot--pulse {
+  animation: erpPulse 1.1s ease-in-out infinite;
+}
+
+/* ── Status badge ── */
+.erp-badge {
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.erp-badge--idle    { background: #334155; color: #94a3b8; }
+.erp-badge--running { background: #78350f; color: #fcd34d; }
+.erp-badge--success { background: #14532d; color: #86efac; }
+.erp-badge--failed  { background: #7f1d1d; color: #fca5a5; }
+
+/* ── Meta items (duration, timestamp) ── */
+.erp-meta {
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ── Panel title (centred flex) ── */
+.erp-panel-title {
+  color: #475569;
+  flex: 1 1 auto;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ── Collapse chevron ── */
+.erp-chevron {
+  color: #475569;
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+/* ── Collapsible body ── */
+.erp-body {
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* ── Inner section wrapper (allows side-by-side on wide screens) ── */
+.erp-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Individual section (Output / Error) ── */
+.erp-section {
+  border-top: 1px solid #1e293b;
+  padding: 14px 20px;
+}
+
+.erp-section--error {
+  border-top-color: #450a0a;
+}
+
+/* ── Section heading ── */
+.erp-section-title {
+  color: #475569;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+.erp-section-title--error {
+  color: #f87171;
+}
+
+/* ── Output box ── */
+.erp-output-box {
+  min-height: 28px;
+}
+
+/* ── Number output — large and prominent ── */
+.erp-output-number {
+  color: #f0fdf4;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* ── String output ── */
+.erp-output-text {
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Boolean output ── */
+.erp-output-bool {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.erp-bool-true  { color: #86efac; }
+.erp-bool-false { color: #fca5a5; }
+
+/* ── Null / empty output ── */
+.erp-null-output {
+  color: #475569;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* ── Key / value table (object output) ── */
+.erp-kv-table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 680px;
+}
+
+.erp-kv-table tr:not(:last-child) td {
+  border-bottom: 1px solid #1e293b;
+}
+
+.erp-kv-key {
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  padding: 5px 16px 5px 0;
+  vertical-align: top;
+  white-space: nowrap;
+  width: 1%;            /* shrink-wrap to content */
+}
+
+.erp-kv-val {
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 0;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+/* Nested object shown inline as compact JSON string */
+.erp-kv-nested {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+/* ── Error box ── */
+.erp-error-box {
+  background: #1c0a0a;
+  border: 1px solid #7f1d1d;
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+
+.erp-error-msg {
+  color: #fca5a5;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* ── Idle / running states ── */
+.erp-empty,
+.erp-running-msg {
+  color: #475569;
+  font-size: 13px;
+  margin: 0;
+  padding: 14px 20px;
+}
+
+.erp-running-msg {
+  align-items: center;
+  color: #fcd34d;
+  display: flex;
+  gap: 10px;
+}
+
+/* Spinner for running state */
+@keyframes erpSpin {
+  to { transform: rotate(360deg); }
+}
+
+.erp-spinner {
+  animation: erpSpin 0.9s linear infinite;
+  border: 2px solid #78350f;
+  border-radius: 50%;
+  border-top-color: #fcd34d;
+  display: inline-block;
+  flex-shrink: 0;
+  height: 14px;
+  width: 14px;
+}
+
+/* ── Null inline (used inside table cells) ── */
+.erp-null {
+  color: #475569;
+  font-style: italic;
 }
