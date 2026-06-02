@@ -11,6 +11,7 @@ import PropertiesPanel from "components/properties/PropertiesPanel";
 import ExecutionHistoryModal from "components/workflow/ExecutionHistoryModal";
 import ExecutionResultPanel from "components/execution/ExecutionResultPanel";
 import SaveNameModal from "components/workflow/SaveNameModal";
+import WorkflowLibrary from "components/workflow/WorkflowLibrary";
 import WorkflowPickerModal from "components/workflow/WorkflowPickerModal";
 import WorkflowSettingsModal from "components/workflow/WorkflowSettingsModal";
 import {
@@ -33,6 +34,7 @@ export default function BuilderPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen]     = useState(false);
   // Lazy initializer: restore the last-saved trigger settings from localStorage
   // so that a page refresh never loses the workflow name, schedule, or active flag.
   // On first render, workflowId is always 'new', so we read the 'new' slot.
@@ -174,6 +176,15 @@ export default function BuilderPage() {
             <i className="ni ni-bullet-list-67 mr-1" />
             History
           </Button>
+          <Button
+            size="sm"
+            color="secondary"
+            onClick={() => setLibraryOpen(true)}
+            title="Open Workflow Library"
+          >
+            <i className="ni ni-collection mr-1" />
+            Library
+          </Button>
           {/* Workflow name — shown after the first save */}
           {triggerSettings.name && (
             <span className="builder-workflow-name" title="Workflow name">
@@ -215,6 +226,13 @@ export default function BuilderPage() {
           isRunning={editor.isExecuting}
         />
       </div>
+
+      {/* ── Workflow Library ── */}
+      <WorkflowLibrary
+        isOpen={libraryOpen}
+        onClose={() => setLibraryOpen(false)}
+        onOpen={handleLoadWorkflow}
+      />
 
       {/* ── Save Name Modal ── */}
       <SaveNameModal

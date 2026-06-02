@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { downloadWorkflowJson } from "engine/graphSerializer";
 import { loadWorkflowDraft } from "engine/autosaveManager";
+import { saveExecutionRecord } from "engine/executionHistoryManager";
 import { executeWorkflowGraph } from "engine/workflowExecutorClient";
 import { useAutosave } from "./useAutosave";
 import { useExecutionFeedback } from "./useExecutionFeedback";
@@ -53,11 +54,33 @@ export function useWorkflowEditor() {
     const startedAt = Date.now();
     try {
       const result = await executeWorkflowGraph(workflow);
-      setExecutionResult({ ...result, startedAt, durationMs: Date.now() - startedAt });
+      const durationMs = Date.now() - startedAt;
+      setExecutionResult({ ...result, startedAt, durationMs });
       setEditorMessage("Execution completed");
+      // Persist run record to localStorage for the Workflow Library history view.
+      // Only saved (non-'new') workflows have a stable ID to key against.
+      saveExecutionRecord(graph.workflowId, {
+        id: `${startedAt}-${Math.random().toString(36).slice(2, 7)}`,
+        timestamp: startedAt,
+        durationMs,
+        status: 'success',
+        output: result.output,
+        error: null,
+        workflowId: graph.workflowId,
+      });
     } catch (error) {
-      setExecutionResult({ error: error.message, startedAt, durationMs: Date.now() - startedAt });
+      const durationMs = Date.now() - startedAt;
+      setExecutionResult({ error: error.message, startedAt, durationMs });
       setEditorMessage("Execution failed");
+      saveExecutionRecord(graph.workflowId, {
+        id: `${startedAt}-${Math.random().toString(36).slice(2, 7)}`,
+        timestamp: startedAt,
+        durationMs,
+        status: 'failed',
+        output: null,
+        error: error.message,
+        workflowId: graph.workflowId,
+      });
     } finally {
       setIsExecuting(false);
     }

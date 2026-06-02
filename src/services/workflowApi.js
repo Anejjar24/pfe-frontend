@@ -64,3 +64,10 @@ export function deactivateWorkflow(id) {
 export function loadExecutions(workflowId) {
   return apiClient.get(`/flows/${workflowId}/executions`).then((res) => res.data);
 }
+
+/**
+ * Delete a workflow and all its associated execution records.
+ */
+export function deleteWorkflow(id) {
+  return apiClient.delete(`/flows/${id}`).then((res) => res.data);
+}
