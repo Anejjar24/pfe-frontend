@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Badge,
@@ -37,6 +38,7 @@ function formatDate(dateStr) {
 
 export default function NotificationsPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const notifications = useSelector(selectNotifications);
   const isLoading = useSelector(selectNotificationsLoading);
   const meta = useSelector(selectNotificationsMeta);
@@ -125,19 +127,24 @@ export default function NotificationsPage() {
               {notifications.map((n) => {
                 const isUnread = !n.readAt;
                 return (
-                  <tr key={n.id} style={isUnread ? { background: '#f0f8ff' } : {}}>
+                  <tr
+                    key={n.id}
+                    className={isUnread ? 'table-active' : ''}
+                    onClick={() => navigate(`/admin/notifications/${n.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <td>
                       <Badge color={TYPE_COLORS[n.type] || 'secondary'} pill>
                         {n.type}
                       </Badge>
                     </td>
-                    <td style={{ fontWeight: isUnread ? 600 : 400, maxWidth: 220 }}>
+                    <td className={isUnread ? 'font-weight-bold' : ''}>
                       {n.subject}
                     </td>
-                    <td style={{ maxWidth: 320, whiteSpace: 'pre-wrap', fontSize: '0.8rem' }}>
+                    <td>
                       {n.content}
                     </td>
-                    <td style={{ whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
+                    <td>
                       {formatDate(n.createdAt)}
                     </td>
                     <td>
@@ -147,15 +154,16 @@ export default function NotificationsPage() {
                         <Badge color="secondary" pill>Read</Badge>
                       )}
                     </td>
-                    <td className="text-right">
+                    <td className="text-right" onClick={(e) => e.stopPropagation()}>
                       {isUnread && (
                         <Button
                           color="link"
                           size="sm"
                           className="p-0"
+                          title="Mark as read"
                           onClick={() => handleMarkRead(n.id)}
                         >
-                          Mark read
+                          <i className="ni ni-check-bold" />
                         </Button>
                       )}
                     </td>

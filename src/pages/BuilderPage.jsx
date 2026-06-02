@@ -1,5 +1,5 @@
 // reactstrap components
-import { Badge, Button, Card, Container, Row } from "reactstrap";
+import { Badge, Button } from "reactstrap";
 
 // core components
 import Header from "components/Headers/Header.js";
@@ -8,8 +8,16 @@ import BlockSidebar from "components/Blocksidebar/BlockSidebar";
 import FlowCanvas from "components/canvas/FlowCanvas";
 import NodeEditorModal from "components/properties/NodeEditorModal";
 import PropertiesPanel from "components/properties/PropertiesPanel";
+import ExecutionHistoryModal from "components/workflow/ExecutionHistoryModal";
+import WorkflowPickerModal from "components/workflow/WorkflowPickerModal";
 import WorkflowSettingsModal from "components/workflow/WorkflowSettingsModal";
-import { saveWorkflowDraft } from "engine/autosaveManager";
+import {
+  clearWorkflowDraft,
+  clearTriggerSettings,
+  loadTriggerSettings,
+  saveWorkflowDraft,
+  saveTriggerSettings,
+} from "engine/autosaveManager";
 import { saveWorkflow } from "services/workflowApi";
 import { useWorkflowEditor } from "hooks/useWorkflowEditor";
 import { useState } from "react";
@@ -19,34 +27,77 @@ export default function BuilderPage() {
   const editor = useWorkflowEditor();
 
   // ─── Trigger / settings state ───────────────────────────────────────────────
-  // Stored here (page level) because it's workflow-level metadata, not node data.
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [triggerSettings, setTriggerSettings] = useState({
-    name: '',
-    triggerType: 'manual',
-    triggerConfig: {},
-    isActive: false,
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  // Lazy initializer: restore the last-saved trigger settings from localStorage
+  // so that a page refresh never loses the workflow name, schedule, or active flag.
+  // On first render, workflowId is always 'new', so we read the 'new' slot.
+  const [triggerSettings, setTriggerSettings] = useState(() => {
+    return loadTriggerSettings('new') ?? {
+      name: '',
+      triggerType: 'manual',
+      triggerConfig: {},
+      isActive: false,
+    };
   });
 
   // ─── Save ───────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     const workflow = editor.refreshWorkflow();
     if (!workflow) return;
-    saveWorkflowDraft(workflow);
+    saveWorkflowDraft(workflow, editor.workflowId);
+    // Persist trigger settings alongside the graph so a refresh restores both.
+    saveTriggerSettings(triggerSettings, editor.workflowId);
     try {
-      await saveWorkflow(workflow, triggerSettings);
+      const result = await saveWorkflow(workflow, triggerSettings);
+      // First time this workflow is persisted: the backend assigned a real UUID.
+      // Migrate localStorage slots from 'new' → real UUID and free the 'new' slots.
+      if (editor.workflowId === 'new' && result?.id) {
+        clearWorkflowDraft('new');
+        clearTriggerSettings('new');
+        saveTriggerSettings(triggerSettings, result.id);
+        editor.setWorkflowId(result.id);
+      }
     } catch {
       // Local save still succeeds when the backend is not running.
     }
   };
 
+  // ─── Load workflow from picker ───────────────────────────────────────────────
+  const handleLoadWorkflow = (wf) => {
+    // Restore the graph onto the canvas
+    if (wf.graph) {
+      editor.importWorkflow(wf.graph);
+    }
+    // Switch the autosave slot to this workflow's real UUID so future drafts
+    // and autosaves are isolated to the correct localStorage key.
+    if (wf.id) {
+      editor.setWorkflowId(wf.id);
+    }
+    // Prefer any locally-saved trigger settings (e.g. unsaved edits made since
+    // the last backend sync), then fall back to the values from the DB record.
+    const localSettings = wf.id ? loadTriggerSettings(wf.id) : null;
+    const restoredSettings = localSettings ?? {
+      name: wf.name || '',
+      triggerType: wf.triggerType || 'manual',
+      triggerConfig: wf.triggerConfig || {},
+      isActive: wf.isActive || false,
+    };
+    setTriggerSettings(restoredSettings);
+    // Ensure settings are persisted under the workflow's own key.
+    if (wf.id) saveTriggerSettings(restoredSettings, wf.id);
+  };
+
   // ─── Settings save ──────────────────────────────────────────────────────────
   const handleSettingsSave = async (settings) => {
     setTriggerSettings(settings);
-    // Immediately persist the trigger config together with the current graph
+    // Persist immediately so a refresh before the next backend save still
+    // restores the new name / trigger type / cron expression / active flag.
+    saveTriggerSettings(settings, editor.workflowId);
     const workflow = editor.refreshWorkflow();
     if (workflow) {
-      saveWorkflowDraft(workflow);
+      saveWorkflowDraft(workflow, editor.workflowId);
       try {
         await saveWorkflow(workflow, settings);
       } catch {
@@ -64,63 +115,87 @@ export default function BuilderPage() {
       : 'manual';
 
   return (
-    <>
+    <div className="builder-page-root">
+      {/* ── Argon-style header (provides the gradient background) ── */}
       <Header />
-      {/* Page content */}
-      <Container className="mt--7" fluid>
-        <Row>
-          <div className="col">
-            <Card className="shadow border-0">
 
-              {/* ── Workflow toolbar ─────────────────────────────────── */}
-              <div className="d-flex align-items-center px-3 pt-3 pb-2" style={{ gap: 8 }}>
-                <Button
-                  size="sm"
-                  color="secondary"
-                  onClick={() => setSettingsOpen(true)}
-                  title="Workflow trigger settings"
-                >
-                  <i className="ni ni-settings mr-1" />
-                  Settings
-                </Button>
-                <Badge
-                  color={triggerSettings.isActive ? 'success' : 'secondary'}
-                  className="text-xs"
-                  title={`Trigger: ${triggerSettings.triggerType}`}
-                >
-                  {triggerLabel}
-                </Badge>
-                {triggerSettings.isActive && (
-                  <Badge color="success" className="text-xs">Active</Badge>
-                )}
-              </div>
+      {/* ── Full-page builder shell — sits in the mt--7 negative-margin zone ── */}
+      <div className="builder-shell mt--7">
 
-              <main className="workflow-builder">
-                <BlockSidebar />
-                <FlowCanvas editor={editor} onSave={handleSave} />
-                <PropertiesPanel editor={editor} />
-                <NodeEditorModal
-                  node={editor.editingNode}
-                  onClose={() => editor.setEditingNode(null)}
-                  onSave={editor.updateSelectedNode}
-                />
-                {editor.editorMessage && (
-                  <div className="workflow-toast">{editor.editorMessage}</div>
-                )}
-              </main>
+        {/* ── Workflow toolbar (always visible, above the 3-panel grid) ── */}
+        <div className="builder-toolbar">
+          <Button
+            size="sm"
+            color="secondary"
+            onClick={() => setSettingsOpen(true)}
+            title="Workflow trigger settings"
+          >
+            <i className="ni ni-settings mr-1" />
+            Settings
+          </Button>
+          <Button
+            size="sm"
+            color="secondary"
+            onClick={() => setHistoryOpen(true)}
+            title={editor.workflowId === 'new' ? 'Save the workflow to view history' : 'Execution history'}
+            disabled={editor.workflowId === 'new'}
+          >
+            <i className="ni ni-bullet-list-67 mr-1" />
+            History
+          </Button>
+          <Badge
+            color={triggerSettings.isActive ? 'success' : 'secondary'}
+            className="text-xs"
+            title={`Trigger: ${triggerSettings.triggerType}`}
+          >
+            {triggerLabel}
+          </Badge>
+          {triggerSettings.isActive && (
+            <Badge color="success" className="text-xs">Active</Badge>
+          )}
+        </div>
 
-            </Card>
-          </div>
-        </Row>
-      </Container>
+        {/* ── 3-panel editor area ── */}
+        <main className="workflow-builder">
+          <BlockSidebar />
+          <FlowCanvas
+            editor={editor}
+            onLoad={() => setPickerOpen(true)}
+            onSave={handleSave}
+          />
+          <PropertiesPanel editor={editor} />
+          <NodeEditorModal
+            node={editor.editingNode}
+            onClose={() => editor.setEditingNode(null)}
+            onSave={editor.updateSelectedNode}
+          />
+          {editor.editorMessage && (
+            <div className="workflow-toast">{editor.editorMessage}</div>
+          )}
+        </main>
+      </div>
 
-      {/* ── Workflow Settings Modal ────────────────────────────────────── */}
+      {/* ── Workflow Settings Modal ── */}
       <WorkflowSettingsModal
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         onSave={handleSettingsSave}
         initial={triggerSettings}
       />
-    </>
+
+      {/* ── Workflow Picker Modal ── */}
+      <WorkflowPickerModal
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={handleLoadWorkflow}
+      />
+
+      {/* ── Execution History Modal ── */}
+      <ExecutionHistoryModal
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        workflowId={editor.workflowId}
+      />
+    </div>
   );
 }

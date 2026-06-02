@@ -54,3 +54,11 @@ export function activateWorkflow(id) {
 export function deactivateWorkflow(id) {
   return apiClient.patch(`/flows/${id}/deactivate`).then((res) => res.data);
 }
+
+/**
+ * Fetch the last 50 execution records for a saved workflow.
+ * Returns an empty array when the workflow has never been executed.
+ */
+export function loadExecutions(workflowId) {
+  return apiClient.get(`/flows/${workflowId}/executions`).then((res) => res.data);
+}

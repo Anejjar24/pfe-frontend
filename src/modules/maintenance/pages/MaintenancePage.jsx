@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { FiEdit } from 'react-icons/fi';
+import { FaTrash } from 'react-icons/fa';
 import {
   Badge,
   Button,
@@ -224,33 +226,38 @@ export default function MaintenancePage() {
           <Table className="align-items-center table-flush" responsive>
             <thead className="thead-light">
               <tr>
-                <th>Title</th>
-                <th>Station</th>
-                <th>Type</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Assigned To</th>
-                <th>Scheduled</th>
-                <th className="text-right">Actions</th>
+                <th scope="col">Title</th>
+                <th scope="col">Station</th>
+                <th scope="col">Type · Priority</th>
+                <th scope="col">Status</th>
+                <th scope="col">Assigned To</th>
+                <th scope="col">Scheduled</th>
+                <th scope="col" className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-5">
+                  <td colSpan="7" className="text-center py-5">
                     <Spinner color="warning" />
                   </td>
                 </tr>
               ) : items.length ? (
                 items.map((item) => (
                   <tr key={item.id}>
-                    <th scope="row">{item.title}</th>
-                    <td>{item.station?.name || '-'}</td>
-                    <td className="text-capitalize">{item.type?.replace('_', ' ')}</td>
+                    <th scope="row">
+                      {item.title}
+                    </th>
+                    <td>
+                      {item.station?.name || <span className="text-muted">—</span>}
+                    </td>
                     <td>
                       <Badge color={PRIORITY_COLORS[item.priority] || 'secondary'}>
                         {item.priority}
                       </Badge>
+                      <span className="text-muted text-capitalize ml-1">
+                        {item.type?.replace('_', ' ')}
+                      </span>
                     </td>
                     <td>
                       <Badge color={STATUS_COLORS[item.status] || 'secondary'}>
@@ -263,28 +270,41 @@ export default function MaintenancePage() {
                         : <span className="text-muted">—</span>}
                     </td>
                     <td>
-                      {item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString() : '-'}
+                      {item.scheduledDate
+                        ? new Date(item.scheduledDate).toLocaleDateString()
+                        : <span className="text-muted">—</span>}
                     </td>
                     <td className="text-right">
                       {canEdit && (
-                        <Button size="sm" color="info" onClick={() => openEdit(item)}>
-                          Edit
+                        <Button
+                          size="sm"
+                          color="info"
+                          title="Edit work order"
+                          onClick={() => openEdit(item)}
+                        >
+                          <FiEdit />
                         </Button>
                       )}
                       {canDelete && (
-                        <Button size="sm" color="danger" className="ml-2" onClick={() => handleDelete(item)}>
-                          Delete
+                        <Button
+                          size="sm"
+                          color="danger"
+                          className="ml-2"
+                          title="Delete work order"
+                          onClick={() => handleDelete(item)}
+                        >
+                          <FaTrash />
                         </Button>
                       )}
                       {!canEdit && !canDelete && (
-                        <span className="text-muted text-sm">Read only</span>
+                        <span className="text-muted" style={{ fontSize: '0.78rem' }}>Read only</span>
                       )}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center text-muted py-5">
+                  <td colSpan="7" className="text-center text-muted py-5">
                     No maintenance records found.
                   </td>
                 </tr>

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiEdit } from 'react-icons/fi';
+import { FaTrash, FaEye } from 'react-icons/fa';
 import useSocket from '../../../hooks/useSocket';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -295,17 +297,17 @@ export default function StationsPage() {
                             <td>{Number(station.capacity).toLocaleString()} {station.capacityUnit}</td>
                             <td>{station.sensors?.length || 0}</td>
                             <td className="text-right">
-                              <Button color="default" size="sm" onClick={() => navigate(`/admin/stations/${station.id}`)}>
-                                View
+                              <Button color="default" size="sm" title="View details" onClick={() => navigate(`/admin/stations/${station.id}`)}>
+                                <FaEye />
                               </Button>
                               {canManageStations && (
                                 <>
-                                  <Button color="info" size="sm" className="ml-2" onClick={() => openEdit(station)}>
-                                    Edit
+                                  <Button color="info" size="sm" className="ml-2" title="Edit station" onClick={() => openEdit(station)}>
+                                    <FiEdit />
                                   </Button>
                                   {userRole === 'admin' && (
-                                    <Button color="danger" size="sm" className="ml-2" onClick={() => handleDelete(station)}>
-                                      Delete
+                                    <Button color="danger" size="sm" className="ml-2" title="Delete station" onClick={() => handleDelete(station)}>
+                                      <FaTrash />
                                     </Button>
                                   )}
                                 </>

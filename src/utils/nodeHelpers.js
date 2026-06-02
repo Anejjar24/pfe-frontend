@@ -8,6 +8,6 @@ export function cloneNodeOffset(node, offset = 36) {
   return {
     type: workflow.type,
     position: { x: position.x + offset, y: position.y + offset },
-    properties: { ...(workflow.properties || {}) },
+    data: { ...(workflow.data || {}) },
   };
 }

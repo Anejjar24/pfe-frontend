@@ -74,6 +74,27 @@ export default function JointPaper({ editor }) {
         event.preventDefault();
         editorRef.current.duplicateSelectedNode();
       }
+
+      // Undo: Ctrl+Z / Cmd+Z
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        editorRef.current.undo();
+      }
+
+      // Redo: Ctrl+Y / Cmd+Y  —OR—  Ctrl+Shift+Z / Cmd+Shift+Z
+      if (
+        ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") ||
+        ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "z")
+      ) {
+        event.preventDefault();
+        editorRef.current.redo();
+      }
+
+      // Fit to screen: Ctrl+Shift+F / Cmd+Shift+F
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        editorRef.current.fitToScreen();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);

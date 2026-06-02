@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { FiEdit } from 'react-icons/fi';
+import { FaTrash, FaEye } from 'react-icons/fa';
 import {
   Badge,
   Button,
@@ -221,13 +223,13 @@ export default function MonitoringPage() {
           <Table className="align-items-center table-flush" responsive>
             <thead className="thead-light">
               <tr>
-                <th>Name</th>
-                <th>Station</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Last Reading</th>
-                <th>Thresholds</th>
-                <th className="text-right">Actions</th>
+                <th scope="col">Name</th>
+                <th scope="col">Station</th>
+                <th scope="col">Type</th>
+                <th scope="col">Status</th>
+                <th scope="col">Last Reading</th>
+                <th scope="col">Thresholds</th>
+                <th scope="col" className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -237,32 +239,36 @@ export default function MonitoringPage() {
                 sensors.map((sensor) => (
                   <tr key={sensor.id}>
                     <th scope="row">{sensor.name}</th>
-                    <td>{sensor.station?.name || '-'}</td>
+                    <td>{sensor.station?.name || <span className="text-muted">—</span>}</td>
                     <td className="text-capitalize">{sensor.type}</td>
-                    <td><Badge color={STATUS_COLORS[sensor.status] || 'secondary'}>{sensor.status}</Badge></td>
                     <td>
-                      {sensor.lastReading === null || sensor.lastReading === undefined
-                        ? '-'
-                        : `${Number(sensor.lastReading).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${sensor.unit}`}
+                      <Badge color={STATUS_COLORS[sensor.status] || 'secondary'}>
+                        {sensor.status}
+                      </Badge>
                     </td>
-                    <td>{sensor.minThreshold ?? '-'} / {sensor.maxThreshold ?? '-'}</td>
+                    <td>
+                      {sensor.lastReading === null || sensor.lastReading === undefined ? (
+                        <span className="text-muted">—</span>
+                      ) : (
+                        <>
+                          {Number(sensor.lastReading).toLocaleString(undefined, { maximumFractionDigits: 2 })}{' '}
+                          <span className="text-muted">{sensor.unit}</span>
+                        </>
+                      )}
+                    </td>
+                    <td>{sensor.minThreshold ?? '—'} / {sensor.maxThreshold ?? '—'}</td>
                     <td className="text-right">
-                      <Button
-                        size="sm"
-                        color="default"
-                        onClick={() => navigate(`/admin/monitoring/${sensor.id}`)}
-                      >
-                        <i className="ni ni-chart-bar-32 mr-1" />
-                        View
+                      <Button size="sm" color="default" title="View sensor" onClick={() => navigate(`/admin/monitoring/${sensor.id}`)}>
+                        <FaEye />
                       </Button>
                       {canManageSensors && (
                         <>
-                          <Button size="sm" color="info" className="ml-2" onClick={() => openEdit(sensor)}>
-                            Edit
+                          <Button size="sm" color="info" className="ml-2" title="Edit sensor" onClick={() => openEdit(sensor)}>
+                            <FiEdit />
                           </Button>
                           {canDelete && (
-                            <Button size="sm" color="danger" className="ml-2" onClick={() => setDeleteTarget(sensor)}>
-                              Delete
+                            <Button size="sm" color="danger" className="ml-2" title="Delete sensor" onClick={() => setDeleteTarget(sensor)}>
+                              <FaTrash />
                             </Button>
                           )}
                         </>

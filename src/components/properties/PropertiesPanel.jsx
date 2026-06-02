@@ -37,7 +37,7 @@ export default function PropertiesPanel({ editor }) {
                 field={field}
                 key={field.name}
                 onChange={handleChange}
-                value={workflow.properties?.[field.name]}
+                value={workflow.data?.[field.name]}
               />
             ))}
           </div>

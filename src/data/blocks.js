@@ -68,21 +68,6 @@ export const workflowBlocks = [
     ],
   },
   {
-    type: "api",
-    title: "API",
-    icon: "fa-cloud-arrow-up",
-    category: "Integrations",
-    description: "Describes an external API call.",
-    color: "#dc2626",
-    inputs: [{ id: "in", label: "Request" }],
-    outputs: [{ id: "out", label: "Response" }],
-    properties: [
-      { name: "label", label: "Label", type: "text", defaultValue: "API Request" },
-      { name: "method", label: "Method", type: "select", defaultValue: "GET", options: ["GET", "POST", "PUT", "PATCH", "DELETE"] },
-      { name: "url", label: "URL", type: "text", defaultValue: "https://api.example.com" },
-    ],
-  },
-  {
     type: "notification",
     title: "Notification",
     icon: "fa-bell",
@@ -93,7 +78,9 @@ export const workflowBlocks = [
     outputs: [{ id: "out", label: "Sent" }],
     properties: [
       { name: "label", label: "Label", type: "text", defaultValue: "Notify" },
-      { name: "channel", label: "Channel", type: "select", defaultValue: "email", options: ["email", "sms", "slack"] },
+      { name: "channel", label: "Channel", type: "select", defaultValue: "in_app", options: ["in_app", "webhook"] },
+      { name: "webhookUrl", label: "Webhook URL (webhook only)", type: "text", defaultValue: "" },
+      { name: "subject", label: "Subject", type: "text", defaultValue: "Workflow Notification" },
       { name: "message", label: "Message", type: "textarea", defaultValue: "Workflow notification" },
     ],
   },
@@ -109,6 +96,40 @@ export const workflowBlocks = [
     properties: [
       { name: "label", label: "Label", type: "text", defaultValue: "Output" },
       { name: "format", label: "Format", type: "select", defaultValue: "json", options: ["json", "text", "number"] },
+    ],
+  },
+
+  {
+    type: "data-transform",
+    title: "Data Transform",
+    icon: "fa-filter",
+    category: "Data",
+    description: "Extracts, mutates, or converts fields in the incoming data payload.",
+    color: "#0891b2",
+    inputs: [{ id: "in", label: "In" }],
+    outputs: [
+      { id: "out", label: "Transformed" },
+      { id: "error", label: "Error" },
+    ],
+    properties: [
+      { name: "label", label: "Label", type: "text", defaultValue: "Transform" },
+      {
+        name: "operation",
+        label: "Operation",
+        type: "select",
+        defaultValue: "extract_field",
+        options: [
+          "extract_field",
+          "set_field",
+          "delete_field",
+          "to_number",
+          "to_string",
+          "parse_json",
+          "stringify_json",
+        ],
+      },
+      { name: "field", label: "Field Name", type: "text", defaultValue: "" },
+      { name: "value", label: "Set Value (set_field only)", type: "text", defaultValue: "" },
     ],
   },
 

@@ -64,9 +64,12 @@ export function createWorkflowNode(type, position = { x: 80, y: 80 }, overrides 
     throw new Error(`Unknown workflow block type "${type}"`);
   }
 
-  const properties = {
+  // Merge block defaults with any values supplied by the caller.
+  // The field is named `data` here to match the external JSON format (node.data)
+  // and the backend WorkflowNode interface — no more internal/external rename needed.
+  const data = {
     ...getDefaultProperties(type),
-    ...(overrides.properties || {}),
+    ...(overrides.data || {}),
   };
 
   const node = new shapes.standard.Rectangle({
@@ -86,7 +89,7 @@ export function createWorkflowNode(type, position = { x: 80, y: 80 }, overrides 
         },
       },
       label: {
-        text: properties.label || definition.title,
+        text: data.label || definition.title,
         fill: "#0f172a",
         fontSize: 13,
         fontWeight: 700,
@@ -100,7 +103,7 @@ export function createWorkflowNode(type, position = { x: 80, y: 80 }, overrides 
     title: definition.title,
     icon: definition.icon,
     color: definition.color,
-    properties,
+    data,
   });
 
   if (overrides.id) node.set("id", overrides.id);
@@ -132,7 +135,7 @@ export function createWorkflowLink(source, target) {
 
 export function updateNodeProperties(node, properties) {
   const workflow = node.get("workflow") || {};
-  const nextProperties = { ...(workflow.properties || {}), ...properties };
-  node.set("workflow", { ...workflow, properties: nextProperties });
-  node.attr("label/text", nextProperties.label || workflow.title || workflow.type);
+  const nextData = { ...(workflow.data || {}), ...properties };
+  node.set("workflow", { ...workflow, data: nextData });
+  node.attr("label/text", nextData.label || workflow.title || workflow.type);
 }

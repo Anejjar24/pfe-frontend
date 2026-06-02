@@ -1,4 +1,15 @@
-export function serializeGraph(graph) {
+/**
+ * graphSerializer.js
+ *
+ * Converts the live JointJS graph into a plain workflow JSON object.
+ *
+ * @param {dia.Graph} graph       - The live JointJS graph instance.
+ * @param {string}   [workflowId] - The current workflow identity managed by
+ *                                  useJointGraph.  Pass undefined / 'new' for an
+ *                                  unsaved workflow so the backend generates a
+ *                                  real UUID on first save.
+ */
+export function serializeGraph(graph, workflowId) {
   const nodes = graph
     .getElements()
     .map((node) => {
@@ -11,7 +22,7 @@ export function serializeGraph(graph) {
         type: workflow.type,
         position,
         size,
-        data: workflow.properties || {},
+        data: workflow.data || {},
       };
     })
     .filter((node) => node.type);
@@ -29,8 +40,12 @@ export function serializeGraph(graph) {
     };
   });
 
+  // Only embed a real UUID — omit the field when the workflow is still unsaved
+  // so that the backend generates its own UUID on POST /flows.
+  const hasRealId = workflowId && workflowId !== 'new' && workflowId !== 'local-workflow';
+
   return {
-    id: "local-workflow",
+    ...(hasRealId ? { id: workflowId } : {}),
     name: "Workflow Builder",
     version: 1,
     updatedAt: new Date().toISOString(),

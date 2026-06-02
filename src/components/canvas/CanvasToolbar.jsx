@@ -2,14 +2,20 @@ import { useRef } from "react";
 
 export default function CanvasToolbar({
   autosaveStatus,
+  canRedo,
+  canUndo,
   isExecuting,
   onDelete,
   onDuplicate,
   onExecute,
   onExport,
+  onFit,
   onImport,
+  onLoad,
+  onRedo,
   onReset,
   onSave,
+  onUndo,
   onZoomIn,
   onZoomOut,
   selectedNode,
@@ -22,6 +28,9 @@ export default function CanvasToolbar({
       <div className="toolbar-group">
         <button onClick={onSave} title="Save workflow" type="button">
           <i className="fa fa-save" aria-hidden="true" />
+        </button>
+        <button onClick={onLoad} title="Load saved workflow" type="button">
+          <i className="fa fa-folder-open" aria-hidden="true" />
         </button>
         <button onClick={onExport} title="Export JSON" type="button">
           <i className="fa fa-download" aria-hidden="true" />
@@ -38,6 +47,14 @@ export default function CanvasToolbar({
         </button>
       </div>
       <div className="toolbar-group">
+        <button disabled={!canUndo} onClick={onUndo} title="Undo (Ctrl+Z)" type="button">
+          <i className="fa fa-undo" aria-hidden="true" />
+        </button>
+        <button disabled={!canRedo} onClick={onRedo} title="Redo (Ctrl+Y)" type="button">
+          <i className="fa fa-redo" aria-hidden="true" />
+        </button>
+      </div>
+      <div className="toolbar-group">
         <button onClick={onZoomOut} title="Zoom out" type="button">
           <i className="fa fa-search-minus" aria-hidden="true" />
         </button>
@@ -45,7 +62,10 @@ export default function CanvasToolbar({
         <button onClick={onZoomIn} title="Zoom in" type="button">
           <i className="fa fa-search-plus" aria-hidden="true" />
         </button>
-        <button onClick={onReset} title="Reset view" type="button">
+        <button onClick={onFit} title="Fit to screen (Ctrl+Shift+F)" type="button">
+          <i className="fa fa-expand-arrows-alt" aria-hidden="true" />
+        </button>
+        <button onClick={onReset} title="Reset view (1:1)" type="button">
           <i className="fa fa-compress" aria-hidden="true" />
         </button>
       </div>

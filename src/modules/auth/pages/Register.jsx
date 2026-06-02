@@ -86,9 +86,9 @@ export default function Register() {
 
   return (
     <>
-      <Col lg="6" md="8">
+      <Col lg="8" md="10">
         <Card className="bg-secondary shadow border-0">
-          <CardBody className="px-lg-5 py-lg-5">
+          <CardBody className="px-lg-5 py-lg-4">
             <div className="text-center text-muted mb-4">
               <small>sign up with credentials</small>
             </div>
@@ -100,44 +100,53 @@ export default function Register() {
             )}
 
             <Form role="form" onSubmit={handleSubmit}>
-              <FormGroup>
-                <InputGroup className="input-group-alternative mb-3">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>
-                      <i className="ni ni-hat-3" />
-                    </InputGroupText>
-                  </InputGroupAddon>
 
-                  <Input
-                    placeholder="First Name"
-                    type="text"
-                    name="firstname"
-                    value={formData.firstname}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                  />
-                </InputGroup>
-              </FormGroup>
+              {/* First Name + Last Name */}
+              <Row>
+                <Col md="6">
+                  <FormGroup>
+                    <InputGroup className="input-group-alternative mb-3">
+                      <InputGroupAddon addonType="prepend">
+                        <InputGroupText>
+                          <i className="ni ni-hat-3" />
+                        </InputGroupText>
+                      </InputGroupAddon>
 
-              <FormGroup>
-                <InputGroup className="input-group-alternative mb-3">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>
-                      <i className="ni ni-single-02" />
-                    </InputGroupText>
-                  </InputGroupAddon>
+                      <Input
+                        placeholder="First Name"
+                        type="text"
+                        name="firstname"
+                        value={formData.firstname}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                      />
+                    </InputGroup>
+                  </FormGroup>
+                </Col>
 
-                  <Input
-                    placeholder="Last Name"
-                    type="text"
-                    name="lastname"
-                    value={formData.lastname}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                  />
-                </InputGroup>
-              </FormGroup>
+                <Col md="6">
+                  <FormGroup>
+                    <InputGroup className="input-group-alternative mb-3">
+                      <InputGroupAddon addonType="prepend">
+                        <InputGroupText>
+                          <i className="ni ni-single-02" />
+                        </InputGroupText>
+                      </InputGroupAddon>
 
+                      <Input
+                        placeholder="Last Name"
+                        type="text"
+                        name="lastname"
+                        value={formData.lastname}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                      />
+                    </InputGroup>
+                  </FormGroup>
+                </Col>
+              </Row>
+
+              {/* Email */}
               <FormGroup>
                 <InputGroup className="input-group-alternative mb-3">
                   <InputGroupAddon addonType="prepend">
@@ -158,84 +167,56 @@ export default function Register() {
                 </InputGroup>
               </FormGroup>
 
-              <FormGroup>
-                <InputGroup className="input-group-alternative mb-3">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>
-                      <i className="ni ni-lock-circle-open" />
-                    </InputGroupText>
-                  </InputGroupAddon>
+              {/* Password + Confirm Password */}
+              <Row>
+                <Col md="6">
+                  <FormGroup>
+                    <InputGroup className="input-group-alternative mb-3">
+                      <InputGroupAddon addonType="prepend">
+                        <InputGroupText>
+                          <i className="ni ni-lock-circle-open" />
+                        </InputGroupText>
+                      </InputGroupAddon>
 
-                  <Input
-                    placeholder="Password"
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    autoComplete="new-password"
-                    disabled={isLoading}
-                  />
-                </InputGroup>
-              </FormGroup>
+                      <Input
+                        placeholder="Password"
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        autoComplete="new-password"
+                        disabled={isLoading}
+                      />
+                    </InputGroup>
+                  </FormGroup>
+                </Col>
 
-              <FormGroup>
-                <InputGroup className="input-group-alternative">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>
-                      <i className="ni ni-key-25" />
-                    </InputGroupText>
-                  </InputGroupAddon>
+                <Col md="6">
+                  <FormGroup>
+                    <InputGroup className="input-group-alternative mb-3">
+                      <InputGroupAddon addonType="prepend">
+                        <InputGroupText>
+                          <i className="ni ni-key-25" />
+                        </InputGroupText>
+                      </InputGroupAddon>
 
-                  <Input
-                    placeholder="Confirm Password"
-                    type="password"
-                    name="passwordConfirm"
-                    value={formData.passwordConfirm}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                  />
-                </InputGroup>
-              </FormGroup>
-
-              <div className="text-muted font-italic">
-                <small>
-                  password strength:{" "}
-                  <span className="text-success font-weight-700">
-                    strong
-                  </span>
-                </small>
-              </div>
-
-              <Row className="my-4">
-                <Col xs="12">
-                  <div className="custom-control custom-control-alternative custom-checkbox">
-                    <input
-                      className="custom-control-input"
-                      id="customCheckRegister"
-                      type="checkbox"
-                    />
-
-                    <label
-                      className="custom-control-label"
-                      htmlFor="customCheckRegister"
-                    >
-                      <span className="text-muted">
-                        I agree with the{" "}
-                        <a
-                          href="#pablo"
-                          onClick={(e) => e.preventDefault()}
-                        >
-                          Privacy Policy
-                        </a>
-                      </span>
-                    </label>
-                  </div>
+                      <Input
+                        placeholder="Confirm Password"
+                        type="password"
+                        name="passwordConfirm"
+                        value={formData.passwordConfirm}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                      />
+                    </InputGroup>
+                  </FormGroup>
                 </Col>
               </Row>
 
+              {/* Submit */}
               <div className="text-center">
                 <Button
-                  className="mt-4"
+                  className="mt-3"
                   color="primary"
                   type="submit"
                   disabled={isLoading}

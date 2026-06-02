@@ -8,7 +8,7 @@ export default function NodeEditorModal({ node, onClose, onSave }) {
   const [properties, setProperties] = useState({});
 
   useEffect(() => {
-    setProperties(workflow?.properties || {});
+    setProperties(workflow?.data || {});
   }, [workflow]);
 
   if (!node || !definition) return null;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { FiEdit } from 'react-icons/fi';
 import {
   Badge,
   Button,
@@ -257,19 +258,20 @@ export default function UsersPage() {
                         <Button
                           size="sm"
                           color="info"
+                          title="Edit role"
                           onClick={() => openEdit(user)}
                         >
-                          Edit Role
+                          <FiEdit />
                         </Button>
                         <Button
                           size="sm"
                           color={user.isActive ? 'warning' : 'success'}
                           className="ml-2"
                           disabled={user.id === currentUser?.id}
-                          title={user.id === currentUser?.id ? 'Cannot deactivate your own account' : ''}
+                          title={user.id === currentUser?.id ? 'Cannot change own account status' : (user.isActive ? 'Deactivate user' : 'Activate user')}
                           onClick={() => handleToggleActive(user)}
                         >
-                          {user.isActive ? 'Deactivate' : 'Activate'}
+                          <i className={user.isActive ? 'ni ni-fat-remove' : 'ni ni-check-bold'} />
                         </Button>
                       </td>
                     )}

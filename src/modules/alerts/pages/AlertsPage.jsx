@@ -135,7 +135,6 @@ export default function AlertsPage() {
                       bsSize="sm"
                       value={severityFilter}
                       onChange={(e) => setSeverityFilter(e.target.value)}
-                      style={{ minWidth: 130 }}
                     >
                       <option value="">All Severities</option>
                       <option value="info">Info</option>
@@ -150,7 +149,6 @@ export default function AlertsPage() {
                       bsSize="sm"
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      style={{ minWidth: 130 }}
                     >
                       <option value="">All Statuses</option>
                       <option value="active">Active</option>
@@ -190,13 +188,13 @@ export default function AlertsPage() {
           <Table className="align-items-center table-flush" responsive>
             <thead className="thead-light">
               <tr>
-                <th>Severity</th>
-                <th>Message</th>
-                <th>Station</th>
-                <th>Sensor</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th className="text-right">Actions</th>
+                <th scope="col">Severity</th>
+                <th scope="col">Message</th>
+                <th scope="col">Station</th>
+                <th scope="col">Sensor</th>
+                <th scope="col">Time</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -210,7 +208,6 @@ export default function AlertsPage() {
                 alerts.map((alert) => (
                   <tr
                     key={alert.id}
-                    style={{ cursor: 'pointer' }}
                     onClick={() => setSelectedAlert(alert)}
                   >
                     <td onClick={(e) => e.stopPropagation()}>
@@ -218,10 +215,18 @@ export default function AlertsPage() {
                         {alert.severity}
                       </Badge>
                     </td>
-                    <th scope="row">{alert.message}</th>
-                    <td>{alert.station?.name || '-'}</td>
-                    <td>{alert.sensor?.name || '-'}</td>
-                    <td>{alert.createdAt ? new Date(alert.createdAt).toLocaleString() : '-'}</td>
+                    <th scope="row">
+                      {alert.message}
+                    </th>
+                    <td>
+                      {alert.station?.name || '-'}
+                    </td>
+                    <td>
+                      {alert.sensor?.name || '-'}
+                    </td>
+                    <td>
+                      {alert.createdAt ? new Date(alert.createdAt).toLocaleString() : '-'}
+                    </td>
                     <td>
                       <Badge color={STATUS_COLORS[alert.status] || 'secondary'}>
                         {alert.status}
@@ -233,19 +238,21 @@ export default function AlertsPage() {
                           <Button
                             size="sm"
                             color="warning"
+                            title="Acknowledge"
                             disabled={alert.status !== 'active'}
                             onClick={() => handleAcknowledge(alert)}
                           >
-                            Ack
+                            <i className="ni ni-check-bold" />
                           </Button>
                           <Button
                             size="sm"
                             color="success"
                             className="ml-2"
+                            title="Resolve"
                             disabled={alert.status === 'resolved'}
                             onClick={() => handleResolve(alert)}
                           >
-                            Resolve
+                            <i className="ni ni-like-2" />
                           </Button>
                         </>
                       ) : (

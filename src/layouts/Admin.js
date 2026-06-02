@@ -7,6 +7,7 @@ import Sidebar from "components/Sidebar/Sidebar.js";
 import routes from "routes.js";
 import SensorDetailsPage from "modules/monitoring/pages/SensorDetailsPage";
 import StationDetailsPage from "modules/stations/pages/StationDetailsPage";
+import NotificationDetailsPage from "modules/notifications/pages/NotificationDetailsPage";
 
 const Admin = (props) => {
   const mainContent = React.useRef(null);
@@ -58,6 +59,7 @@ const Admin = (props) => {
           {getRoutes(routes)}
           <Route path="/monitoring/:sensorId" element={<SensorDetailsPage />} />
           <Route path="/stations/:stationId" element={<StationDetailsPage />} />
+          <Route path="/notifications/:notificationId" element={<NotificationDetailsPage />} />
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Routes>
         <Container fluid>

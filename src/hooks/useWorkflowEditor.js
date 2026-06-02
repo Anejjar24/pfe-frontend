@@ -3,6 +3,7 @@ import { downloadWorkflowJson } from "engine/graphSerializer";
 import { loadWorkflowDraft } from "engine/autosaveManager";
 import { executeWorkflowGraph } from "engine/workflowExecutorClient";
 import { useAutosave } from "./useAutosave";
+import { useExecutionFeedback } from "./useExecutionFeedback";
 import { useJointGraph } from "./useJointGraph";
 
 export function useWorkflowEditor() {
@@ -11,7 +12,11 @@ export function useWorkflowEditor() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [editorMessage, setEditorMessage] = useState("");
   const [editingNode, setEditingNode] = useState(null);
-  const autosaveStatus = useAutosave(graph.workflow);
+  const autosaveStatus = useAutosave(graph.workflow, graph.workflowId);
+
+  // Subscribe to real-time execution events and highlight nodes on the canvas
+  // as the backend WorkflowRunner processes them.
+  useExecutionFeedback(graph.graphRef, graph.workflowId);
 
   const exportJson = useCallback(() => {
     const workflow = graph.refreshWorkflow();
