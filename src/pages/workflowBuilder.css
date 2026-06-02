@@ -800,7 +800,161 @@
 }
 
 /* ------------------------------------------------------------------
-   21. EXECUTION RESULT PANEL
+   21. WORKFLOW NAME DISPLAY (builder-toolbar)
+   ------------------------------------------------------------------ */
+
+.builder-workflow-name {
+  align-items: center;
+  color: #334155;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 0;
+  letter-spacing: 0.01em;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------
+   22. SAVE NAME MODAL
+   Dark-themed minimal dialog — name input + Save/Cancel.
+   Reuses .modal-backdrop (section 16) for the overlay.
+   ------------------------------------------------------------------ */
+
+.snm-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: min(420px, calc(100vw - 32px));
+}
+
+/* Header row */
+.snm-header {
+  align-items: center;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.snm-title {
+  color: #f1f5f9;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.snm-close {
+  background: transparent;
+  border: 0;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.15s ease;
+}
+
+.snm-close:hover { color: #e2e8f0; }
+
+/* Body */
+.snm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px 20px 18px;
+}
+
+.snm-label {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.snm-input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 7px;
+  box-sizing: border-box;
+  color: #f1f5f9;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  padding: 10px 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.snm-input::placeholder { color: #475569; }
+
+.snm-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.snm-input--error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+.snm-error {
+  color: #f87171;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* Footer */
+.snm-footer {
+  border-top: 1px solid #334155;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 14px 20px;
+}
+
+.snm-btn {
+  border: 1px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  height: 36px;
+  padding: 0 18px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.snm-btn--cancel {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.snm-btn--cancel:hover {
+  background: #273549;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.snm-btn--save {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.snm-btn--save:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+/* ------------------------------------------------------------------
+   21 (cont). EXECUTION RESULT PANEL
    Full-width dark dashboard panel — sits below the 3-panel grid
    inside .builder-shell.  Collapsed = status bar only (40 px).
    Expanded = status bar + content body (up to 220 px).

@@ -10,6 +10,7 @@ import NodeEditorModal from "components/properties/NodeEditorModal";
 import PropertiesPanel from "components/properties/PropertiesPanel";
 import ExecutionHistoryModal from "components/workflow/ExecutionHistoryModal";
 import ExecutionResultPanel from "components/execution/ExecutionResultPanel";
+import SaveNameModal from "components/workflow/SaveNameModal";
 import WorkflowPickerModal from "components/workflow/WorkflowPickerModal";
 import WorkflowSettingsModal from "components/workflow/WorkflowSettingsModal";
 import {
@@ -31,6 +32,7 @@ export default function BuilderPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
   // Lazy initializer: restore the last-saved trigger settings from localStorage
   // so that a page refresh never loses the workflow name, schedule, or active flag.
   // On first render, workflowId is always 'new', so we read the 'new' slot.
@@ -43,21 +45,31 @@ export default function BuilderPage() {
     };
   });
 
-  // ─── Save ───────────────────────────────────────────────────────────────────
-  const handleSave = async () => {
+  // ─── Save — two-step: name modal → persist ──────────────────────────────────
+  // Step 1: clicking Save opens the name dialog instead of saving immediately.
+  const handleSaveClick = () => setSaveModalOpen(true);
+
+  // Step 2: user confirmed a name — update settings then persist.
+  const handleConfirmSave = async (chosenName) => {
+    setSaveModalOpen(false);
+    // Merge the confirmed name into trigger settings so every downstream
+    // call (localStorage, API) uses the same value.
+    const settingsWithName = { ...triggerSettings, name: chosenName };
+    setTriggerSettings(settingsWithName);
+
     const workflow = editor.refreshWorkflow();
     if (!workflow) return;
     saveWorkflowDraft(workflow, editor.workflowId);
-    // Persist trigger settings alongside the graph so a refresh restores both.
-    saveTriggerSettings(triggerSettings, editor.workflowId);
+    // Persist trigger settings (including the new name) alongside the graph.
+    saveTriggerSettings(settingsWithName, editor.workflowId);
     try {
-      const result = await saveWorkflow(workflow, triggerSettings);
+      const result = await saveWorkflow(workflow, settingsWithName);
       // First time this workflow is persisted: the backend assigned a real UUID.
       // Migrate localStorage slots from 'new' → real UUID and free the 'new' slots.
       if (editor.workflowId === 'new' && result?.id) {
         clearWorkflowDraft('new');
         clearTriggerSettings('new');
-        saveTriggerSettings(triggerSettings, result.id);
+        saveTriggerSettings(settingsWithName, result.id);
         editor.setWorkflowId(result.id);
       }
     } catch {
@@ -128,7 +140,7 @@ export default function BuilderPage() {
           <Button
             size="sm"
             color="primary"
-            onClick={handleSave}
+            onClick={handleSaveClick}
             title="Save workflow to backend"
           >
             <i className="fa fa-save mr-1" />
@@ -162,6 +174,14 @@ export default function BuilderPage() {
             <i className="ni ni-bullet-list-67 mr-1" />
             History
           </Button>
+          {/* Workflow name — shown after the first save */}
+          {triggerSettings.name && (
+            <span className="builder-workflow-name" title="Workflow name">
+              <i className="fa fa-circle" style={{ fontSize: 5, marginRight: 6, verticalAlign: 'middle', color: '#94a3b8' }} />
+              {triggerSettings.name}
+            </span>
+          )}
+
           <Badge
             color={triggerSettings.isActive ? 'success' : 'secondary'}
             className="text-xs"
@@ -195,6 +215,14 @@ export default function BuilderPage() {
           isRunning={editor.isExecuting}
         />
       </div>
+
+      {/* ── Save Name Modal ── */}
+      <SaveNameModal
+        isOpen={saveModalOpen}
+        initial={triggerSettings.name}
+        onSave={handleConfirmSave}
+        onClose={() => setSaveModalOpen(false)}
+      />
 
       {/* ── Workflow Settings Modal ── */}
       <WorkflowSettingsModal

@@ -9,7 +9,9 @@ import apiClient from './apiClient';
  */
 export function saveWorkflow(workflow, trigger = {}) {
   return apiClient.post('/flows', {
-    name: workflow.name || 'Workflow Builder',
+    // trigger.name (set by SaveNameModal / WorkflowSettingsModal) takes priority
+    // over the graph-level default so the user's chosen name reaches the backend.
+    name: trigger.name || workflow.name || 'Workflow Builder',
     graph: workflow,
     triggerType: trigger.triggerType ?? 'manual',
     triggerConfig: trigger.triggerConfig ?? {},
