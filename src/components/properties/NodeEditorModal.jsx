@@ -26,14 +26,21 @@ export default function NodeEditorModal({ node, onClose, onSave }) {
           </button>
         </header>
         <div className="property-stack">
-          {definition.properties.map((field) => (
-            <PropertyField
-              field={field}
-              key={field.name}
-              onChange={(name, value) => setProperties((current) => ({ ...current, [name]: value }))}
-              value={properties[field.name]}
-            />
-          ))}
+          {definition.properties
+            .filter((field) => {
+              if (!field.showFor) return true;
+              const op = properties.operation ?? definition.properties.find((f) => f.name === "operation")?.defaultValue;
+              return field.showFor.includes(op);
+            })
+            .map((field) => (
+              <PropertyField
+                field={field}
+                key={field.name}
+                onChange={(name, value) => setProperties((current) => ({ ...current, [name]: value }))}
+                value={properties[field.name]}
+                allValues={properties}
+              />
+            ))}
         </div>
         <footer>
           <button onClick={onClose} type="button">Cancel</button>

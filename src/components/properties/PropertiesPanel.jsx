@@ -32,14 +32,21 @@ export default function PropertiesPanel({ editor }) {
             </div>
           </div>
           <div className="property-stack">
-            {definition.properties.map((field) => (
-              <PropertyField
-                field={field}
-                key={field.name}
-                onChange={handleChange}
-                value={workflow.data?.[field.name]}
-              />
-            ))}
+            {definition.properties
+              .filter((field) => {
+                if (!field.showFor) return true;
+                const op = workflow.data?.operation ?? definition.properties.find((f) => f.name === "operation")?.defaultValue;
+                return field.showFor.includes(op);
+              })
+              .map((field) => (
+                <PropertyField
+                  field={field}
+                  key={field.name}
+                  onChange={handleChange}
+                  value={workflow.data?.[field.name]}
+                  allValues={workflow.data}
+                />
+              ))}
           </div>
         </>
       )}

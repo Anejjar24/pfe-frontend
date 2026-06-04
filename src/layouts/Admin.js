@@ -8,6 +8,7 @@ import routes from "routes.js";
 import SensorDetailsPage from "modules/monitoring/pages/SensorDetailsPage";
 import StationDetailsPage from "modules/stations/pages/StationDetailsPage";
 import NotificationDetailsPage from "modules/notifications/pages/NotificationDetailsPage";
+import SensorLabPage from "simulator/pages/SensorLabPage";
 
 const Admin = (props) => {
   const mainContent = React.useRef(null);
@@ -38,6 +39,28 @@ const Admin = (props) => {
     return "Brand";
   };
 
+  // The Sensor Lab is a full-screen isolated page — skip the Argon wrapper.
+  const isSimLab = location.pathname.startsWith("/admin/sensor-lab");
+
+  if (isSimLab) {
+    return (
+      <>
+        <Sidebar
+          {...props}
+          routes={routes}
+          logo={{
+            innerLink: "/admin/dashboard",
+            imgSrc:    require("../assets/img/brand/logo.png"),
+            imgAlt:    "...",
+          }}
+        />
+        <div className="main-content" ref={mainContent}>
+          <SensorLabPage />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Sidebar
@@ -49,7 +72,7 @@ const Admin = (props) => {
           imgAlt:    "...",
         }}
       />
-     
+
       <div className="main-content" ref={mainContent}>
         <AdminNavbar
           {...props}

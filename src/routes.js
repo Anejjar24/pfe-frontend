@@ -12,6 +12,7 @@ import Login from "modules/auth/pages/Login";
 import Register from "modules/auth/pages/Register";
 import BuilderPage from "views/builder/BuilderPage";
 import Test from "views/test.js";
+import SensorLabPage from "simulator/pages/SensorLabPage";
 
 var routes = [
   {
@@ -68,6 +69,13 @@ var routes = [
     name: "Diagnostics",
     icon: "ni ni-settings text-orange",
     component: <Test />,
+    layout: "/admin",
+  },
+  {
+    path: "/sensor-lab",
+    name: "Sensor Lab",
+    icon: "ni ni-atom text-cyan",
+    component: <SensorLabPage />,
     layout: "/admin",
   },
   // {
