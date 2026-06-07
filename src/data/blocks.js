@@ -487,6 +487,63 @@ export const workflowBlocks = [
     ],
   },
 
+  // ── Custom Calculation block ───────────────────────────────────────────────
+
+  {
+    type: "custom-calc",
+    title: "Custom Calc",
+    icon: "fa-calculator",
+    category: "Industrial",
+    description: "Fetches up to 4 sensors (a, b, c, d), aligns their time series, evaluates a user-defined math formula at every timestamp, then aggregates the result into a single output value.",
+    color: "#f97316",
+    inputs: [{ id: "trigger", label: "Trigger" }],
+    outputs: [
+      { id: "result", label: "Result" },
+      { id: "series", label: "Series" },
+      { id: "error",  label: "Error"  },
+    ],
+    properties: [
+      { name: "label",   label: "Label",   type: "text", defaultValue: "Custom Calc" },
+
+      // ── Formula ────────────────────────────────────────────────────────────
+      { name: "formula", label: "Formula  (use variables a, b, c, d)", type: "text",
+        defaultValue: "(a + b) / 2" },
+
+      // ── Sensor bindings ────────────────────────────────────────────────────
+      { name: "stationA", label: "Station  (a)", type: "station-select", defaultValue: "" },
+      { name: "sensorA",  label: "Sensor   (a)", type: "sensor-select", stationField: "stationA", defaultValue: "" },
+
+      { name: "stationB", label: "Station  (b)", type: "station-select", defaultValue: "" },
+      { name: "sensorB",  label: "Sensor   (b)", type: "sensor-select", stationField: "stationB", defaultValue: "" },
+
+      { name: "stationC", label: "Station  (c)", type: "station-select", defaultValue: "" },
+      { name: "sensorC",  label: "Sensor   (c)", type: "sensor-select", stationField: "stationC", defaultValue: "" },
+
+      { name: "stationD", label: "Station  (d)", type: "station-select", defaultValue: "" },
+      { name: "sensorD",  label: "Sensor   (d)", type: "sensor-select", stationField: "stationD", defaultValue: "" },
+
+      // ── Time range ─────────────────────────────────────────────────────────
+      { name: "timeMode", label: "Time Range", type: "select", defaultValue: "all_data",
+        options: ["all_data", "custom_range"] },
+      { name: "startDate", label: "Start Date / Time",  type: "datetime-local", defaultValue: "",
+        showWhen: { field: "timeMode", values: ["custom_range"] } },
+      { name: "endDate",   label: "End Date / Time",    type: "datetime-local", defaultValue: "",
+        showWhen: { field: "timeMode", values: ["custom_range"] } },
+
+      // ── Resampling ─────────────────────────────────────────────────────────
+      { name: "resampleStrategy", label: "Resampling Strategy", type: "select",
+        defaultValue: "interpolate",
+        options: ["interpolate", "forward_fill", "downsample"] },
+      { name: "downsampleAgg", label: "Downsample Aggregation", type: "select",
+        defaultValue: "mean", options: ["mean", "min", "max", "sum"],
+        showWhen: { field: "resampleStrategy", values: ["downsample"] } },
+
+      // ── Output aggregation ─────────────────────────────────────────────────
+      { name: "aggregation", label: "Output Aggregation", type: "select",
+        defaultValue: "mean", options: ["mean", "min", "max", "sum", "last"] },
+    ],
+  },
+
   // ── Integration blocks ─────────────────────────────────────────────────────
 
   {

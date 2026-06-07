@@ -34,9 +34,20 @@ export default function PropertiesPanel({ editor }) {
           <div className="property-stack">
             {definition.properties
               .filter((field) => {
-                if (!field.showFor) return true;
-                const op = workflow.data?.operation ?? definition.properties.find((f) => f.name === "operation")?.defaultValue;
-                return field.showFor.includes(op);
+                const data = workflow.data ?? {};
+                // showFor — shorthand: checks against the "operation" field
+                if (field.showFor) {
+                  const op = data.operation
+                    ?? definition.properties.find((f) => f.name === "operation")?.defaultValue;
+                  if (!field.showFor.includes(op)) return false;
+                }
+                // showWhen — generic: checks against any named field
+                if (field.showWhen) {
+                  const controlling = data[field.showWhen.field]
+                    ?? definition.properties.find((f) => f.name === field.showWhen.field)?.defaultValue;
+                  if (!field.showWhen.values.includes(controlling)) return false;
+                }
+                return true;
               })
               .map((field) => (
                 <PropertyField

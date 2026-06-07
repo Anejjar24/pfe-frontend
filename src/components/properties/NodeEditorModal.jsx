@@ -28,9 +28,19 @@ export default function NodeEditorModal({ node, onClose, onSave }) {
         <div className="property-stack">
           {definition.properties
             .filter((field) => {
-              if (!field.showFor) return true;
-              const op = properties.operation ?? definition.properties.find((f) => f.name === "operation")?.defaultValue;
-              return field.showFor.includes(op);
+              // showFor — shorthand: checks against the "operation" field
+              if (field.showFor) {
+                const op = properties.operation
+                  ?? definition.properties.find((f) => f.name === "operation")?.defaultValue;
+                if (!field.showFor.includes(op)) return false;
+              }
+              // showWhen — generic: checks against any named field
+              if (field.showWhen) {
+                const controlling = properties[field.showWhen.field]
+                  ?? definition.properties.find((f) => f.name === field.showWhen.field)?.defaultValue;
+                if (!field.showWhen.values.includes(controlling)) return false;
+              }
+              return true;
             })
             .map((field) => (
               <PropertyField

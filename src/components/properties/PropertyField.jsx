@@ -67,6 +67,8 @@ export default function PropertyField({ field, value, allValues, onChange }) {
         </select>
       ) : field.type === 'textarea' ? (
         <textarea {...commonProps} rows={4} />
+      ) : field.type === 'datetime-local' ? (
+        <input {...commonProps} type="datetime-local" />
       ) : (
         <input {...commonProps} type={field.type || 'text'} />
       )}
