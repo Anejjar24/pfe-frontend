@@ -15,7 +15,6 @@ export const fetchAnalyticsOverview = createAsyncThunk(
   },
 );
 
-/** Loads the full sensor list for the analysis dropdown (max 100). */
 export const fetchAnalyticsSensors = createAsyncThunk(
   'analytics/fetchSensors',
   async () => {
@@ -24,10 +23,6 @@ export const fetchAnalyticsSensors = createAsyncThunk(
   },
 );
 
-/**
- * Fetch aggregated stats for one sensor over a time range.
- * @param {{ sensorId: string, params: { from?: string, to?: string } }} arg
- */
 export const fetchSensorStats = createAsyncThunk(
   'analytics/fetchSensorStats',
   async ({ sensorId, params }, { rejectWithValue }) => {
@@ -39,26 +34,65 @@ export const fetchSensorStats = createAsyncThunk(
   },
 );
 
+export const fetchKpis = createAsyncThunk(
+  'analytics/fetchKpis',
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      return await analyticsService.getKpis(params);
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to load KPIs');
+    }
+  },
+);
+
+export const fetchSystemMetrics = createAsyncThunk(
+  'analytics/fetchSystemMetrics',
+  async (hours = 24, { rejectWithValue }) => {
+    try {
+      return await analyticsService.getSystemMetrics(hours);
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to load system metrics');
+    }
+  },
+);
+
+export const fetchPipelineStats = createAsyncThunk(
+  'analytics/fetchPipelineStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await analyticsService.getPipelineStats();
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to load pipeline stats');
+    }
+  },
+);
+
 // ─── Slice ────────────────────────────────────────────────────────────────────
 
 const analyticsSlice = createSlice({
   name: 'analytics',
   initialState: {
-    // Overview KPI data
     overview: null,
     overviewLoading: false,
     overviewError: null,
 
-    // Sensor dropdown list
     sensors: [],
 
-    // Per-sensor time-series stats
     sensorStats: null,
     statsLoading: false,
     statsError: null,
+
+    kpis: null,
+    kpisLoading: false,
+    kpisError: null,
+
+    systemMetrics: null,
+    systemMetricsLoading: false,
+
+    pipelineStats: null,
+    pipelineStatsLoading: false,
   },
   reducers: {
-    /** Clear sensor stats when the user de-selects a sensor. */
     clearSensorStats(state) {
       state.sensorStats = null;
       state.statsError = null;
@@ -66,39 +100,27 @@ const analyticsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // ── Overview ────────────────────────────────────────────────────────────
-      .addCase(fetchAnalyticsOverview.pending, (state) => {
-        state.overviewLoading = true;
-        state.overviewError = null;
-      })
-      .addCase(fetchAnalyticsOverview.fulfilled, (state, action) => {
-        state.overviewLoading = false;
-        state.overview = action.payload;
-      })
-      .addCase(fetchAnalyticsOverview.rejected, (state, action) => {
-        state.overviewLoading = false;
-        state.overviewError = action.payload || action.error.message || 'Unknown error';
-      })
+      .addCase(fetchAnalyticsOverview.pending,   (state) => { state.overviewLoading = true;  state.overviewError = null; })
+      .addCase(fetchAnalyticsOverview.fulfilled, (state, action) => { state.overviewLoading = false; state.overview = action.payload; })
+      .addCase(fetchAnalyticsOverview.rejected,  (state, action) => { state.overviewLoading = false; state.overviewError = action.payload || action.error.message; })
 
-      // ── Sensor list ─────────────────────────────────────────────────────────
-      .addCase(fetchAnalyticsSensors.fulfilled, (state, action) => {
-        state.sensors = action.payload;
-      })
+      .addCase(fetchAnalyticsSensors.fulfilled, (state, action) => { state.sensors = action.payload; })
 
-      // ── Sensor stats ────────────────────────────────────────────────────────
-      .addCase(fetchSensorStats.pending, (state) => {
-        state.statsLoading = true;
-        state.statsError = null;
-        state.sensorStats = null;
-      })
-      .addCase(fetchSensorStats.fulfilled, (state, action) => {
-        state.statsLoading = false;
-        state.sensorStats = action.payload;
-      })
-      .addCase(fetchSensorStats.rejected, (state, action) => {
-        state.statsLoading = false;
-        state.statsError = action.payload || action.error.message || 'Unknown error';
-      });
+      .addCase(fetchSensorStats.pending,   (state) => { state.statsLoading = true;  state.statsError = null; state.sensorStats = null; })
+      .addCase(fetchSensorStats.fulfilled, (state, action) => { state.statsLoading = false; state.sensorStats = action.payload; })
+      .addCase(fetchSensorStats.rejected,  (state, action) => { state.statsLoading = false; state.statsError = action.payload || action.error.message; })
+
+      .addCase(fetchKpis.pending,   (state) => { state.kpisLoading = true;  state.kpisError = null; })
+      .addCase(fetchKpis.fulfilled, (state, action) => { state.kpisLoading = false; state.kpis = action.payload; })
+      .addCase(fetchKpis.rejected,  (state, action) => { state.kpisLoading = false; state.kpisError = action.payload || action.error.message; })
+
+      .addCase(fetchSystemMetrics.pending,   (state) => { state.systemMetricsLoading = true; })
+      .addCase(fetchSystemMetrics.fulfilled, (state, action) => { state.systemMetricsLoading = false; state.systemMetrics = action.payload; })
+      .addCase(fetchSystemMetrics.rejected,  (state) => { state.systemMetricsLoading = false; })
+
+      .addCase(fetchPipelineStats.pending,   (state) => { state.pipelineStatsLoading = true; })
+      .addCase(fetchPipelineStats.fulfilled, (state, action) => { state.pipelineStatsLoading = false; state.pipelineStats = action.payload; })
+      .addCase(fetchPipelineStats.rejected,  (state) => { state.pipelineStatsLoading = false; });
   },
 });
 
@@ -106,12 +128,16 @@ export const { clearSensorStats } = analyticsSlice.actions;
 
 // ─── Selectors ────────────────────────────────────────────────────────────────
 
-export const selectAnalyticsOverview = (state) => state.analytics.overview;
+export const selectAnalyticsOverview        = (state) => state.analytics.overview;
 export const selectAnalyticsOverviewLoading = (state) => state.analytics.overviewLoading;
-export const selectAnalyticsOverviewError = (state) => state.analytics.overviewError;
-export const selectAnalyticsSensors = (state) => state.analytics.sensors;
-export const selectAnalyticsSensorStats = (state) => state.analytics.sensorStats;
-export const selectAnalyticsStatsLoading = (state) => state.analytics.statsLoading;
-export const selectAnalyticsStatsError = (state) => state.analytics.statsError;
+export const selectAnalyticsOverviewError   = (state) => state.analytics.overviewError;
+export const selectAnalyticsSensors         = (state) => state.analytics.sensors;
+export const selectAnalyticsSensorStats     = (state) => state.analytics.sensorStats;
+export const selectAnalyticsStatsLoading    = (state) => state.analytics.statsLoading;
+export const selectAnalyticsStatsError      = (state) => state.analytics.statsError;
+export const selectAnalyticsKpis            = (state) => state.analytics.kpis;
+export const selectAnalyticsKpisLoading     = (state) => state.analytics.kpisLoading;
+export const selectAnalyticsSystemMetrics   = (state) => state.analytics.systemMetrics;
+export const selectAnalyticsPipelineStats   = (state) => state.analytics.pipelineStats;
 
 export default analyticsSlice.reducer;

@@ -15,6 +15,21 @@ export const analyticsService = {
     const response = await apiClient.get(`/analytics/stations/${stationId}/history`, { params });
     return response.data;
   },
+
+  async getKpis(params = {}) {
+    const response = await apiClient.get('/analytics/kpis', { params });
+    return response.data;
+  },
+
+  async getSystemMetrics(hours = 24) {
+    const response = await apiClient.get('/analytics/system-metrics', { params: { hours } });
+    return response.data;
+  },
+
+  async getPipelineStats() {
+    const response = await apiClient.get('/analytics/pipeline/stats');
+    return response.data;
+  },
 };
 
 export default analyticsService;
